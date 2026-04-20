@@ -1,29 +1,40 @@
 {
-  "name": "saas-showcase",
-  "private": true,
-  "version": "0.1.0",
-  "type": "module",
-  "scripts": {
-    "dev": "vite",
-    "build": "vue-tsc -b && vite build",
-    "preview": "vite preview"
-  },
-  "dependencies": {
-    "@mdi/font": "^7.4.47",
-    "firebase": "^11.10.0",
-    "pinia": "^2.1.7",
-    "vue": "^3.5.13",
-    "vue-router": "^4.5.0",
-    "vuetify": "^3.7.1"
-  },
-  "devDependencies": {
-    "@types/node": "^22.13.10",
-    "@vitejs/plugin-vue": "^5.2.1",
-    "@vue/tsconfig": "^0.7.0",
-    "sass": "^1.85.1",
-    "typescript": "~5.7.2",
-    "vite": "^6.2.0",
-    "vite-plugin-vuetify": "^2.0.4",
-    "vue-tsc": "^2.2.4"
-  }
+    "name": "saas-showcase",
+    "private": true,
+    "version": "0.1.0",
+    "type": "module",
+    "scripts": {
+        "dev": "vite",
+        "build": "vue-tsc -b && vite build",
+        "preview": "vite preview",
+        "firebase:login": "firebase login",
+        "firebase:use": "firebase use --add",
+        "firebase:deploy": "firebase deploy",
+        "firebase:deploy:firestore": "firebase deploy --only firestore",
+        "firebase:deploy:rules": "firebase deploy --only firestore:rules",
+        "firebase:deploy:indexes": "firebase deploy --only firestore",
+        "firebase:deploy:storage": "firebase deploy --only storage",
+        "firebase:deploy:security": "firebase deploy --only firestore,storage",
+        "firebase:claims": "node scripts/set-custom-claims.mjs",
+        "firebase:bootstrap": "node scripts/bootstrap-firebase.mjs"
+    },
+    "dependencies": {
+        "@mdi/font": "^7.4.47",
+        "firebase": "^11.10.0",
+        "firebase-admin": "^13.8.0",
+        "pinia": "^2.1.7",
+        "vue": "^3.5.13",
+        "vue-router": "^4.5.0",
+        "vuetify": "^3.7.1"
+    },
+    "devDependencies": {
+        "@types/node": "^22.13.10",
+        "@vitejs/plugin-vue": "^5.2.1",
+        "@vue/tsconfig": "^0.7.0",
+        "sass": "^1.85.1",
+        "typescript": "~5.7.2",
+        "vite": "^6.2.0",
+        "vite-plugin-vuetify": "^2.0.4",
+        "vue-tsc": "^2.2.4"
+    }
 }
