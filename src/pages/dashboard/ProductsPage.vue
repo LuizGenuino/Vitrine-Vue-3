@@ -306,7 +306,7 @@ onMounted(loadData);
                             </td>
                             <td class="text-right">
                                 <div class="d-flex justify-end ga-2">
-                                    <v-btn size="small" variant="tonal" @click="openEdit(product)">Editar</v-btn>
+                                    <v-btn size="small" color="info" variant="tonal" @click="openEdit(product)">Editar</v-btn>
                                     <v-btn size="small" variant="text" color="error"
                                         @click="removeProduct(product.id)">Excluir</v-btn>
                                 </div>
