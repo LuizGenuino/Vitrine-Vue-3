@@ -13,6 +13,7 @@ import ImageUploadDropzone from '@/components/base/ImageUploadDropzone.vue';
 import EmptyState from '@/components/base/EmptyState.vue';
 import DashboardMetricCard from '@/components/dashboard/DashboardMetricCard.vue';
 import type { Category, Product, Subcategory } from '@/types';
+import { gerarCodigo } from '@/utils/generate';
 
 const authStore = useAuthStore();
 const storefrontStore = useStorefrontStore();
@@ -39,6 +40,7 @@ const initialForm = (): Product => ({
     subcategoryId: '',
     imageUrls: [],
     status: 'active',
+    code: ''
 });
 
 const form = reactive<Product>(initialForm());
@@ -83,8 +85,8 @@ function categoryName(categoryId?: string) {
 
 function resetForm() {
     Object.assign(form, initialForm());
-    characteristicsInput.value = '';
     pendingFiles.value = [];
+    delete form.id
 }
 
 async function loadData() {
@@ -98,6 +100,7 @@ async function loadData() {
             categoryService.listCategories(ownerId),
             categoryService.listSubcategories(ownerId),
         ]);
+
     } finally {
         loading.value = false;
     }
@@ -110,6 +113,7 @@ function openCreate() {
     }
     resetForm();
     drawer.value = true;
+    Object.assign(form, initialForm());
 }
 
 function openEdit(product: Product) {
@@ -172,11 +176,12 @@ async function saveProduct() {
     loading.value = true;
     try {
         const ownerId = authStore.user.uid;
+        const code = gerarCodigo(8)
         let imageUrls = form.imageUrls.filter((item) => item.startsWith('http'));
 
         if (pendingFiles.value.length) {
             const availableNames = namesPermited(imageUrls)
-            const uploaded = await uploadMany(ownerId, 'products', pendingFiles.value, availableNames);
+            const uploaded = await uploadMany(ownerId, `products/${form.code || code}`, pendingFiles.value, availableNames);
             imageUrls = [...imageUrls, ...uploaded];
         }
 
@@ -191,6 +196,7 @@ async function saveProduct() {
                 .map((item) => item.trim())
                 .filter(Boolean),
             imageUrls,
+            code: form.code || code
         });
 
         drawer.value = false;
@@ -348,13 +354,13 @@ onMounted(loadData);
 
             <ImageUploadDropzone :model-value="form.imageUrls" :max="4" @select-files="handleSelectFiles"
                 @remove="removeImage" />
-            <v-text-field v-model="form.name" label="Nome do produto" />
+            <v-text-field v-model="form.name" label="Nome do produto*" />
             <v-row>
-                <v-col cols="12" md="6"><v-text-field v-model="form.price" label="Preço" type="number" /></v-col>
-                <v-col cols="12" md="6"><v-text-field v-model="form.quantity" label="Quantidade"
+                <v-col cols="12" md="6"><v-text-field v-model="form.price" label="Preço*" type="number" /></v-col>
+                <v-col cols="12" md="6"><v-text-field v-model="form.quantity" label="Quantidade*"
                         type="number" /></v-col>
             </v-row>
-            <v-textarea v-model="form.description" label="Descrição" rows="3" />
+            <v-textarea v-model="form.description" label="Descrição*" rows="3" />
             <v-textarea v-model="characteristicsInput" label="Características"
                 hint="Uma por linha ou separadas por vírgula" persistent-hint rows="4" />
             <v-row>

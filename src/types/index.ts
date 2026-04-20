@@ -45,6 +45,7 @@ export interface Product {
   quantity: number;
   description: string;
   characteristics: string[];
+  code: string;
   categoryId?: string;
   subcategoryId?: string;
   imageUrls: string[];
