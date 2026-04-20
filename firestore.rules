@@ -1,0 +1,40 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function ownerFromRequest() {
+      return request.resource.data.ownerId;
+    }
+
+    function ownerFromResource() {
+      return resource.data.ownerId;
+    }
+
+    match /stores/{storeId} {
+      allow read: if true;
+      allow create: if signedIn() && ownerFromRequest() == request.auth.uid;
+      allow update, delete: if signedIn() && ownerFromResource() == request.auth.uid && ownerFromRequest() == request.auth.uid;
+    }
+
+    match /categories/{categoryId} {
+      allow read: if true;
+      allow create: if signedIn() && ownerFromRequest() == request.auth.uid;
+      allow update, delete: if signedIn() && ownerFromResource() == request.auth.uid && ownerFromRequest() == request.auth.uid;
+    }
+
+    match /subcategories/{subcategoryId} {
+      allow read: if true;
+      allow create: if signedIn() && ownerFromRequest() == request.auth.uid;
+      allow update, delete: if signedIn() && ownerFromResource() == request.auth.uid && ownerFromRequest() == request.auth.uid;
+    }
+
+    match /products/{productId} {
+      allow read: if true;
+      allow create: if signedIn() && ownerFromRequest() == request.auth.uid;
+      allow update, delete: if signedIn() && ownerFromResource() == request.auth.uid && ownerFromRequest() == request.auth.uid;
+    }
+  }
+}
