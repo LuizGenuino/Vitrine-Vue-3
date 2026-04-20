@@ -153,6 +153,15 @@ function removeImage(index: number) {
     form.imageUrls.splice(index, 1);
 }
 
+function namesPermited(urls: string[]) {
+    const namesPermited = ['fotos-1', 'fotos-2', 'fotos-3', 'fotos-4'];
+    const existingNames = urls.map((url) => {
+        const match = url.match(/\/([^\/]+)\.(jpg|jpeg|png|webp|gif)$/);
+        return match ? match[1] : null;
+    });
+    return namesPermited.filter((name) => !existingNames.includes(name));
+}
+
 async function saveProduct() {
     if (!authStore.user?.uid || !canSave.value) return;
     if (!isEditing.value && !canCreateProduct.value) {
@@ -166,8 +175,9 @@ async function saveProduct() {
         let imageUrls = form.imageUrls.filter((item) => item.startsWith('http'));
 
         if (pendingFiles.value.length) {
-            const uploaded = await uploadMany(ownerId, 'products', pendingFiles.value);
-            imageUrls = uploaded;
+            const availableNames = namesPermited(imageUrls)
+            const uploaded = await uploadMany(ownerId, 'products', pendingFiles.value, availableNames);
+            imageUrls = [...imageUrls, ...uploaded];
         }
 
         await productService.save({
@@ -306,7 +316,8 @@ onMounted(loadData);
                             </td>
                             <td class="text-right">
                                 <div class="d-flex justify-end ga-2">
-                                    <v-btn size="small" color="info" variant="tonal" @click="openEdit(product)">Editar</v-btn>
+                                    <v-btn size="small" color="info" variant="tonal"
+                                        @click="openEdit(product)">Editar</v-btn>
                                     <v-btn size="small" variant="text" color="error"
                                         @click="removeProduct(product.id)">Excluir</v-btn>
                                 </div>
