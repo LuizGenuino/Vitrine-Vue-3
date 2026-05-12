@@ -1,44 +1,90 @@
 <script setup lang="ts">
-import { computed } from 'vue';
-import { useRoute } from 'vue-router';
+import { ref } from 'vue';
 import ThemeToggle from '@/components/base/ThemeToggle.vue';
-import CartDrawer from '@/components/public/CartDrawer.vue';
-import { useCartStore } from '@/stores/cart';
-import { useUiStore } from '@/stores/ui';
 
-const route = useRoute();
-const cartStore = useCartStore();
-const uiStore = useUiStore();
+const drawer = ref(false);
 
-const currentStoreSlug = computed(() => {
-  const value = route.params.storeSlug;
-  return typeof value === 'string' ? value : '';
-});
-
-const visibleCartCount = computed(() =>
-  currentStoreSlug.value ? cartStore.countByStore(currentStoreSlug.value) : cartStore.count,
-);
+const navLinks = [
+    { title: 'Como funciona', to: '#como-funciona' },
+    { title: 'Preços', to: '#precos' },
+    { title: 'Exemplos', to: '#exemplos' },
+];
 </script>
 
 <template>
-  <v-main class="bg-background">
-    <div class="px-4 px-md-8 pt-4 pt-md-6">
-      <v-card class="backdrop-soft px-4 py-3 d-flex align-center justify-space-between" rounded="pill">
-        <router-link :to="{ name: 'landing' }" class="d-flex align-center ga-3">
-          <v-avatar color="primary" size="34">VS</v-avatar>
-          <div>
-            <div class="font-weight-bold">VibeStore</div>
-            <div class="text-caption text-medium-emphasis">Sua Vitrine Digital Simplificada</div>
-          </div>
-        </router-link>
-
-        <div class="d-flex align-center ga-2">
-          <ThemeToggle />
+    <v-navigation-drawer v-model="drawer" location="right" temporary class="pa-4">
+        <div class="d-flex flex-column ga-4">
+            <div class="text-overline mb-2">Navegação</div>
+            <v-btn v-for="link in navLinks" :key="link.title" variant="text" block class="justify-start">
+                {{ link.title }}
+            </v-btn>
+            <v-divider></v-divider>
+            <v-btn variant="outlined" color="primary" block :to="{ name: 'login' }">Entrar</v-btn>
+            <v-btn color="primary" block :to="{ name: 'register' }">Criar minha vitrine</v-btn>
         </div>
-      </v-card>
-    </div>
+    </v-navigation-drawer>
 
-    <router-view />
-    <CartDrawer :store-slug="currentStoreSlug" />
-  </v-main>
+    <v-app-bar flat color="transparent" height="100" extension-height="0">
+        <v-container class="pa-0">
+            <v-card class="navbar-blur px-4 py-2 mx-2 mx-md-0 d-flex align-center justify-space-between" rounded="pill"
+                elevation="0" border>
+                <router-link :to="{ name: 'landing' }"
+                    class="d-flex align-center ga-3 text-decoration-none text-high-emphasis">
+                    <v-avatar color="primary" size="40" class="elevation-4">
+                        <span class="text-white font-weight-bold">VS</span>
+                    </v-avatar>
+                    <div class="hidden-xs-only">
+                        <div class="font-weight-black text-h6 leading-tight">VibeStore</div>
+                        <div class="text-caption text-medium-emphasis mt-n1">Vitrine Digital</div>
+                    </div>
+                </router-link>
+
+                <div class="hidden-md-and-down d-flex align-center ga-2">
+                    <v-btn v-for="link in navLinks" :key="link.title" variant="text" class="text-none">
+                        {{ link.title }}
+                    </v-btn>
+                </div>
+
+                <div class="d-flex align-center ga-1 ga-sm-2">
+                    <ThemeToggle />
+
+                    <div class="hidden-sm-and-down d-flex align-center ga-2">
+                        <v-btn variant="text" font-weight-bold :to="{ name: 'login' }" class="text-none">Entrar</v-btn>
+                        <v-btn color="primary" rounded="pill" elevation="0" :to="{ name: 'register' }"
+                            class="text-none px-6">
+                            Começar Agora
+                        </v-btn>
+                    </div>
+
+                    <v-btn icon="mdi-menu" variant="tonal" color="primary" class="hidden-md-and-up ml-2"
+                        @click="drawer = !drawer"></v-btn>
+                </div>
+            </v-card>
+        </v-container>
+    </v-app-bar>
+
+    <v-main class="bg-background">
+        <router-view />
+    </v-main>
 </template>
+
+<style scoped>
+.navbar-blur {
+    background: rgba(var(--v-theme-surface), 0.8) !important;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-color: rgba(var(--v-border-color), 0.1) !important;
+}
+
+.leading-tight {
+    line-height: 1.2;
+}
+
+.router-link-active {
+    text-decoration: none;
+}
+
+.v-card {
+    transition: all 0.3s ease-in-out;
+}
+</style>
