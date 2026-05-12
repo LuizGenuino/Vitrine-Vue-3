@@ -25,19 +25,15 @@ const visibleCartCount = computed(() =>
     <div class="px-4 px-md-8 pt-4 pt-md-6">
       <v-card class="backdrop-soft px-4 py-3 d-flex align-center justify-space-between" rounded="pill">
         <router-link :to="{ name: 'landing' }" class="d-flex align-center ga-3">
-          <v-avatar color="primary" size="34">V</v-avatar>
+          <v-avatar color="primary" size="34">VS</v-avatar>
           <div>
-            <div class="font-weight-bold">Vitrine SaaS</div>
-            <div class="text-caption text-medium-emphasis">mini-commerce com checkout via WhatsApp</div>
+            <div class="font-weight-bold">VibeStore</div>
+            <div class="text-caption text-medium-emphasis">Sua Vitrine Digital Simplificada</div>
           </div>
         </router-link>
 
         <div class="d-flex align-center ga-2">
           <ThemeToggle />
-          <v-btn variant="tonal" color="primary" @click="uiStore.openCartDrawer">
-            Carrinho
-            <v-chip size="small" class="ml-2">{{ visibleCartCount }}</v-chip>
-          </v-btn>
         </div>
       </v-card>
     </div>
