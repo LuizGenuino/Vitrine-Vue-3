@@ -1,18 +1,12 @@
 <script setup lang="ts">
 import type { Product } from '@/types';
-import { formatCurrency } from '@/utils/format';
+import { formatCurrency, textoLimitado } from '@/utils/format';
 import { computed } from 'vue';
 
 const props = defineProps<{
     product: Product;
     storeSlug: string;
 }>();
-
-const textoLimitado = computed(() => {
-    const palavras = props.product.description.split(' ')
-    if (palavras.length <= 10) return props.product.description
-    return palavras.slice(0, 10).join(' ') + '...'
-})
 
 </script>
 
@@ -24,7 +18,7 @@ const textoLimitado = computed(() => {
             <div class="mt-4">
                 <div class="text-body-1 font-weight-bold">{{ props.product.name }}</div>
                 <div class="text-body-2 text-medium-emphasis mt-1" style="min-height: 42px">
-                    <p class="text-line-clamp-2">{{ textoLimitado }}</p>
+                    <p class="text-line-clamp-2">{{ textoLimitado(props.product.description, 10) }}</p>
                 </div>
                 <div class="d-flex align-center justify-space-between mt-4">
                     <div class="text-h6 font-weight-bold">{{ formatCurrency(props.product.price) }}</div>

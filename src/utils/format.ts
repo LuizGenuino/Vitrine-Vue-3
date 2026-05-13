@@ -14,3 +14,9 @@ export const slugify = (value: string) =>
     .replace(/^-+|-+$/g, '');
 
 export const buildTimestamp = () => new Date().toISOString();
+
+export const textoLimitado = (texto: string, limite: number) => {
+    const palavras = texto.split(' ');
+    if (palavras.length <= limite) return texto;
+    return palavras.slice(0, limite).join(' ') + '...';
+}

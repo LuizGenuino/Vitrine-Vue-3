@@ -7,7 +7,7 @@ import { productService } from '@/services/productService';
 import { categoryService } from '@/services/categoryService';
 import { useImageUpload } from '@/composables/useImageUpload';
 import { usePlanAccess } from '@/composables/usePlanAccess';
-import { formatCurrency, slugify } from '@/utils/format';
+import { formatCurrency, slugify, textoLimitado } from '@/utils/format';
 import AppSectionCard from '@/components/base/AppSectionCard.vue';
 import ImageUploadDropzone from '@/components/base/ImageUploadDropzone.vue';
 import EmptyState from '@/components/base/EmptyState.vue';
@@ -36,6 +36,7 @@ const initialForm = (): Product => ({
     quantity: 0,
     description: '',
     characteristics: [],
+    details: '',
     categoryId: '',
     subcategoryId: '',
     imageUrls: [],
@@ -118,6 +119,7 @@ function openCreate() {
 function openEdit(product: Product) {
     Object.assign(form, { ...product });
     characteristicsInput.value = product.characteristics.join('\n');
+    form.details = product.details;
     drawer.value = true;
 }
 
@@ -306,7 +308,9 @@ onMounted(loadData);
                                     </v-avatar>
                                     <div>
                                         <div class="font-weight-bold">{{ product.name }}</div>
-                                        <div class="text-body-2 text-medium-emphasis">{{ product.description }}</div>
+                                        <div class="text-body-2 text-medium-emphasis">{{
+                                            textoLimitado(product.description, 35) }}
+                                        </div>
                                     </div>
                                 </div>
                             </td>

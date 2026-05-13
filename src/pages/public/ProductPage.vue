@@ -28,7 +28,6 @@ const categoryName = computed(() => categories.value.find((item) => item.id === 
 async function loadProduct() {
   loading.value = true;
   try {
-    await storefrontStore.loadBySlug(storeSlug.value);
     product.value = await productService.getPublicProductBySlug(storeSlug.value, productSlug.value);
     activeImage.value = product.value?.imageUrls[0] || '';
 
@@ -55,7 +54,7 @@ function addToCart() {
 
 function buyNow() {
   if (!product.value) return;
-  window.open(buildProductLink(storefrontStore.settings.whatsappNumber, product.value), '_blank');
+  window.open(buildProductLink(storefrontStore.settings.channels.whatsappNumber, product.value), '_blank');
 }
 
 onMounted(loadProduct);
@@ -81,10 +80,11 @@ onMounted(loadProduct);
         <v-col cols="12" md="6">
           <v-chip variant="tonal" class="mb-4">{{ categoryName }}</v-chip>
           <div class="text-h4 font-weight-bold">{{ product.name }}</div>
-          <div class="text-h5 font-weight-bold mt-4" :style="{ color: storefrontStore.settings.primaryColor }">
+          <div class="text-h5 font-weight-bold mt-4" :style="{ color: storefrontStore.settings.branding.primaryColor }">
             {{ formatCurrency(product.price) }}
           </div>
           <div class="text-body-1 text-medium-emphasis mt-4">{{ product.description }}</div>
+          <div class="text-body-1 text-medium-emphasis mt-4">{{ product.details }}</div>
 
           <v-divider class="my-6" />
 

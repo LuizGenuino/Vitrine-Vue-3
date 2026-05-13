@@ -70,6 +70,7 @@ export interface Product {
     compareAtPrice?: number | null;
     quantity: number;
     description: string;
+    details: string;
     characteristics: string[];
     code: string;
     categoryId?: string;
