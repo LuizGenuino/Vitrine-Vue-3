@@ -72,5 +72,11 @@ export const useImageUpload = () => {
         }
     }
 
-    return { uploading, uploadMany };
-};
+    async function deleteFile(ownerId: string, folder: string, code: string, names: string[]) {
+        const deletePromises = names.map(name => storageService.deleteFile(`${ownerId}/${folder}/${code}/${name}`));
+        await Promise.all(deletePromises);
+    }
+
+    return { uploading, uploadMany, deleteFile };
+}
+

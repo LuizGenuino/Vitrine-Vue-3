@@ -14,12 +14,13 @@ import EmptyState from '@/components/base/EmptyState.vue';
 import DashboardMetricCard from '@/components/dashboard/DashboardMetricCard.vue';
 import type { Category, Product, Subcategory } from '@/types';
 import { gerarCodigo } from '@/utils/generate';
+import DialogCreateProducts from './components/DialogCreateProducts.vue';
 
 const authStore = useAuthStore();
 const useStore = useStorefrontStore();
 const feedbackStore = useFeedbackStore();
-const { uploading, uploadMany } = useImageUpload();
-const drawer = ref(false);
+const { uploading, uploadMany, deleteFile } = useImageUpload();
+const dialog = ref(false);
 const loading = ref(false);
 const search = ref('');
 const statusFilter = ref<'all' | 'active' | 'draft'>('all');
@@ -45,9 +46,7 @@ const initialForm = (): Product => ({
 });
 
 const form = reactive<Product>(initialForm());
-const characteristicsInput = ref('');
 
-const filteredSubcategories = computed(() => subcategories.value.filter((item) => item.categoryId === form.categoryId));
 const visibleProducts = computed(() => {
     const term = search.value.trim().toLowerCase();
     return products.value.filter((product) => {
@@ -112,50 +111,13 @@ function openCreate() {
         return;
     }
     resetForm();
-    drawer.value = true;
+    dialog.value = true;
     Object.assign(form, initialForm());
 }
 
 function openEdit(product: Product) {
     Object.assign(form, { ...product });
-    characteristicsInput.value = product.characteristics.join('\n');
-    form.details = product.details;
-    drawer.value = true;
-}
-
-async function handleSelectFiles(files: File[]) {
-    const MAX_FILES = 4;
-
-    const currentTotal = form.imageUrls.length;
-    const availableSlots = MAX_FILES - currentTotal;
-
-    if (availableSlots <= 0) return;
-
-    const filesToAdd = files.slice(0, availableSlots);
-
-    pendingFiles.value = [...pendingFiles.value, ...filesToAdd];
-
-    const newTemporaryUrls = filesToAdd.map((file) => URL.createObjectURL(file));
-
-    form.imageUrls = [...form.imageUrls, ...newTemporaryUrls];
-}
-
-function removeImage(index: number) {
-    const urlToRemove = form.imageUrls[index];
-
-    if (urlToRemove.startsWith('blob:')) {
-        const blobIndex = form.imageUrls
-            .filter(url => url.startsWith('blob:'))
-            .indexOf(urlToRemove);
-
-        if (blobIndex !== -1) {
-            pendingFiles.value.splice(blobIndex, 1);
-        }
-
-        URL.revokeObjectURL(urlToRemove);
-    }
-
-    form.imageUrls.splice(index, 1);
+    dialog.value = true;
 }
 
 function namesPermited(urls: string[]) {
@@ -192,15 +154,11 @@ async function saveProduct() {
             slug: form.slug || slugify(form.name),
             price: Number(form.price),
             quantity: Number(form.quantity),
-            characteristics: characteristicsInput.value
-                .split(/\n|,/)
-                .map((item) => item.trim())
-                .filter(Boolean),
             imageUrls,
             code: form.code || code
         });
 
-        drawer.value = false;
+        dialog.value = false;
         resetForm();
         await loadData();
         feedbackStore.show('Produto salvo com sucesso.', 'success');
@@ -209,11 +167,21 @@ async function saveProduct() {
     }
 }
 
-async function removeProduct(id?: string) {
-    if (!id) return;
-    await productService.remove(id);
-    await loadData();
-    feedbackStore.show('Produto removido do catálogo.', 'info');
+async function removeProduct(product: Product) {
+    if (!product.id) return;
+    try {
+        const namesFiles = product.imageUrls.map((url, index) => {
+            return `foto-${index}.webp`;
+        })
+        await deleteFile(product.ownerId, `products`, product.code, namesFiles as string[]);
+        await productService.remove(product.id);
+        await loadData();
+        feedbackStore.show('Produto removido do catálogo.', 'info');
+    } catch (error) {
+        console.error("Erro ao remover produto:", error);
+        feedbackStore.show('Erro ao remover produto.', 'error');
+    }
+
 }
 
 onMounted(loadData);
@@ -328,7 +296,7 @@ onMounted(loadData);
                                     <v-btn size="small" color="info" variant="tonal"
                                         @click="openEdit(product)">Editar</v-btn>
                                     <v-btn size="small" variant="text" color="error"
-                                        @click="removeProduct(product.id)">Excluir</v-btn>
+                                        @click="removeProduct(product)">Excluir</v-btn>
                                 </div>
                             </td>
                         </tr>
@@ -346,51 +314,10 @@ onMounted(loadData);
         </AppSectionCard>
     </div>
 
-    <v-navigation-drawer v-model="drawer" location="right" temporary width="560">
-        <div class="pa-5 d-flex flex-column ga-4">
-            <div>
-                <div class="text-h6 font-weight-bold">{{ form.id ? 'Editar produto' : 'Novo produto' }}</div>
-                <div class="text-body-2 text-medium-emphasis mt-1">Agora com validações mais claras, métricas e
-                    consciência
-                    do plano atual.</div>
-            </div>
-
-            <ImageUploadDropzone :model-value="form.imageUrls" :max="4" @select-files="handleSelectFiles"
-                @remove="removeImage" />
-            <v-text-field v-model="form.name" label="Nome do produto*" />
-            <v-row>
-                <v-col cols="12" md="6"><v-text-field v-model="form.price" label="Preço*" type="number" /></v-col>
-                <v-col cols="12" md="6"><v-text-field v-model="form.quantity" label="Quantidade*"
-                        type="number" /></v-col>
-            </v-row>
-            <v-textarea v-model="form.description" label="Descrição*" rows="3" />
-            <v-textarea v-model="characteristicsInput" label="Características"
-                hint="Uma por linha ou separadas por vírgula" persistent-hint rows="4" />
-            <v-row>
-                <v-col cols="12" md="6">
-                    <v-select v-model="form.categoryId" :items="categories" item-title="name" item-value="id"
-                        label="Categoria" />
-                </v-col>
-                <v-col cols="12" md="6">
-                    <v-select v-model="form.subcategoryId" :items="filteredSubcategories" item-title="name"
-                        item-value="id" label="Subcategoria" />
-                </v-col>
-            </v-row>
-            <v-select v-model="form.status" :items="['active', 'draft']" label="Status" />
-
-            <v-alert v-if="!canSave" type="info" variant="tonal">Preencha nome, descrição, preço e ao menos uma imagem
-                para
-                salvar.</v-alert>
-            <v-alert v-if="!isEditing && isLimitReached" type="warning" variant="tonal">
-                Novos produtos estão bloqueados pelo limite do plano atual.
-            </v-alert>
-
-            <div class="d-flex ga-3 mt-2">
-                <v-btn color="primary" :loading="loading || uploading"
-                    :disabled="!canSave || (!isEditing && !canCreateProduct)" @click="saveProduct">Salvar
-                    produto</v-btn>
-                <v-btn variant="text" @click="drawer = false">Cancelar</v-btn>
-            </div>
-        </div>
-    </v-navigation-drawer>
+    <DialogCreateProducts v-if="dialog" v-model:form="form" v-model:can-create-product="canCreateProduct"
+        v-model:can-save="canSave" v-model:categories="categories"
+        v-model:dialog="dialog" v-model:is-editing="isEditing" v-model:loading="loading"
+        v-model:is-limit-reached="isLimitReached" v-model:pending-files="pendingFiles"
+        v-model:subcategories="subcategories" v-model:uploading="uploading" @save-product="saveProduct"
+        @close="dialog = false" />
 </template>

@@ -72,7 +72,6 @@ watch(() => storefront.settings.ownerId, (newId) => {
     if (newId) loadData();
 }, { immediate: true });
 
-console.log('Storefront settings in StorefrontPage:', storefront.settings);
 </script>
 
 <template>
