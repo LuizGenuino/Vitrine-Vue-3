@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { productService } from '@/services/productService';
 import { categoryService } from '@/services/categoryService';
@@ -18,8 +18,6 @@ const uiStore = useUiStore();
 const { buildProductLink } = useWhatsApp();
 
 const panel = ref([0, 1])
-
-
 const product = ref<Product | null>(null);
 const categories = ref<Category[]>([]);
 const loading = ref(true);
@@ -28,15 +26,22 @@ const quantity = ref(1);
 
 const storeSlug = computed(() => String(route.params.storeSlug || ''));
 const productSlug = computed(() => String(route.params.productSlug || ''));
+
 const categoryName = computed(() =>
     categories.value.find((item) => item.id === product.value?.categoryId)?.name || 'Produto'
 );
 
-const characteristics = computed(() => product.value?.characteristics.map((item: string) => {
-    const array = item.split(':')
-    console.log(array);
-    return { key: array[0], value: array[1] }
-}))
+// Computed de características mais robusto
+const characteristics = computed(() => {
+    if (!product.value?.characteristics) return [];
+    return product.value.characteristics.map((item: string) => {
+        const [key, ...valueParts] = item.split(':');
+        return {
+            key: key?.trim() || 'Info',
+            value: valueParts.join(':')?.trim() || 'Consultar'
+        };
+    });
+});
 
 async function loadProduct() {
     loading.value = true;
@@ -68,162 +73,198 @@ function addToCart() {
 
 function buyNow() {
     if (!product.value) return;
-    // Integra a quantidade no link do WhatsApp se seu composable permitir
     window.open(buildProductLink(storefrontStore.settings.channels.whatsappNumber, product.value), '_blank');
 }
-
 
 onMounted(loadProduct);
 </script>
 
 <template>
-    <v-container class="pb-16 pt-4">
-        <v-btn variant="text" prepend-icon="mdi-arrow-left" class="mb-6 text-none opacity-70" @click="router.back()">
+    <v-container class="pb-16 pt-4 px-4 px-md-10">
+        <v-btn variant="text" prepend-icon="mdi-chevron-left" class="mb-6 text-none opacity-70 px-0"
+            @click="router.back()">
             Voltar para a vitrine
         </v-btn>
 
-        <v-row v-if="loading">
-            <v-col cols="12" md="6">
-                <v-skeleton-loader type="image, image" height="500" class="rounded-xl" />
-            </v-col>
-            <v-col cols="12" md="6">
-                <v-skeleton-loader type="article, actions" class="rounded-xl" />
+        <v-row v-if="loading" justify="center">
+            <v-col cols="12" md="10">
+                <v-skeleton-loader type="image, article, actions" class="rounded-xl" />
             </v-col>
         </v-row>
 
-        <v-row v-else-if="product" class="px-4" justify="center">
-            <v-col cols="12" md="6" lg="7">
-                <v-card variant="flat" rounded="xl" class="overflow-hidden border">
-                    <v-img :src="activeImage || 'https://placehold.co/800x800?text=Sem+Imagem'" height="500" cover
-                        class="bg-grey-lighten-4 transition-swing">
-                        <template v-slot:placeholder>
-                            <div class="d-flex align-center justify-center fill-height">
-                                <v-progress-circular indeterminate color="primary" />
-                            </div>
-                        </template>
-                    </v-img>
+        <v-row v-else-if="product" spacing="6" justify="center">
+            <v-col cols="12" md="7" lg="8">
+                <v-card variant="flat" rounded="xl" class="overflow-hidden border mb-8">
+                    <v-img :src="activeImage || 'https://placehold.co/800x800?text=Sem+Imagem'" height="550" cover
+                        class="bg-grey-lighten-4" />
                 </v-card>
 
-                <v-slide-group v-if="product.imageUrls.length > 1" class="mt-4" show-arrows>
+                <v-slide-group v-if="product.imageUrls.length > 1" class="mb-10" show-arrows>
                     <v-slide-group-item v-for="image in product.imageUrls" :key="image">
                         <v-card
-                            :class="['ma-2 rounded-lg border-2', activeImage === image ? 'border-primary' : 'border-transparent']"
-                            width="80" height="80" @click="activeImage = image">
+                            :class="['ma-2 rounded-lg border-2 transition-swing', activeImage === image ? 'border-primary shadow-sm' : 'border-transparent opacity-70']"
+                            width="90" height="90" @click="activeImage = image">
                             <v-img :src="image" cover height="100%" />
                         </v-card>
                     </v-slide-group-item>
                 </v-slide-group>
-            </v-col>
 
-            <v-col cols="12" md="6" lg="4">
-                <v-chip size="small" variant="tonal" color="primary" class="mb-2 font-weight-bold">
-                    {{ categoryName }}
-                </v-chip>
-
-                <h1 class="text-h4 font-weight-black mb-2">{{ product.name }}</h1>
-
-                <div class="d-flex align-baseline ga-2 mb-6">
-                    <span class="text-h4 font-weight-bold text-primary">
-                        {{ formatCurrency(product.price) }}
-                    </span>
-                    <span class="text-caption text-medium-emphasis">à vista no Pix/Dinheiro</span>
-                </div>
-
-                <div class="d-flex align-center ga-4 mb-8">
-                    <div class="text-subtitle-2 font-weight-bold">Quantidade:</div>
-                    <v-btn-toggle v-model="quantity" mandatory rounded="pill" color="primary" variant="outlined"
-                        divided>
-                        <v-btn :value="quantity - 1" icon="mdi-minus" size="small"
-                            @click="quantity > 1 ? quantity-- : null" />
-                        <v-btn disabled class="px-6 text-body-1 font-weight-bold">{{ quantity }}</v-btn>
-                        <v-btn :value="quantity + 1" icon="mdi-plus" size="small" @click="quantity++" />
-                    </v-btn-toggle>
-                </div>
-
-                <div class="d-flex flex-column ga-3">
-                    <v-btn block size="x-large" color="primary" rounded="pill" elevation="8"
-                        class="text-none font-weight-bold" prepend-icon="mdi-whatsapp" @click="buyNow">
-                        Pedir agora pelo WhatsApp
-                    </v-btn>
-
-                    <v-btn block size="x-large" variant="outlined" color="primary" rounded="pill"
-                        class="text-none font-weight-bold" prepend-icon="mdi-cart-plus" @click="addToCart">
-                        Adicionar ao Carrinho
-                    </v-btn>
-                </div>
-            </v-col>
-            <div class="ma-auto" style="width: 1000px;">
-                <v-col cols="12">
-                    <p class="text-h4 mb-4">Descrição</p>
-                    <p class="text-body-1 text-medium-emphasis mb-8 leading-relaxed">
+                <section class="mb-12">
+                    <h2 class="text-h5 font-weight-bold mb-4 border-s-lg border-primary ps-4">Descrição</h2>
+                    <p class="text-body-1 text-medium-emphasis leading-relaxed pre-line">
                         {{ product.description }}
                     </p>
-                </v-col>
-                <v-col cols="12">
-                    <p class="text-h4 mb-4">Caracteristicas</p>
-                    <v-table striped="even">
+                </section>
+
+                <section v-if="characteristics.length" class="mb-12">
+                    <h2 class="text-h5 font-weight-bold mb-6 border-s-lg border-primary ps-4">Caracteristicas</h2>
+                    <v-table class="border rounded-xl spec-table">
                         <tbody>
                             <tr v-for="item in characteristics" :key="item.key">
-                                <td>{{ item.key }}</td>
-                                <td>{{ item.value }}</td>
+                                <td class="bg-grey-lighten-4 font-weight-bold text-caption text-uppercase" width="35%">
+                                    {{ item.key }}</td>
+                                <td class="text-body-2">{{ item.value }}</td>
                             </tr>
                         </tbody>
                     </v-table>
+                </section>
+                <section v-if="product.details" class="mb-12">
+                    <h2 class="text-h5 font-weight-bold mb-6 border-s-lg border-primary ps-4">Detalhes</h2>
+                    <p class="text-body-1 text-medium-emphasis leading-relaxed pre-line">
+                        {{ product.details }}
+                    </p>
+                </section>
+            </v-col>
 
-                </v-col>
-                <v-col cols="12">
-                    <v-divider class="my-10" />
+            <v-col cols="12" md="5" lg="4">
+                <div class="sticky-top">
+                    <v-card variant="flat" rounded="xl" border class="pa-6 pa-md-8">
+                        <v-chip size="x-small" variant="flat" color="primary"
+                            class="mb-4 font-weight-black text-uppercase">
+                            {{ categoryName }}
+                        </v-chip>
 
+                        <h1 class="text-h4 font-weight-black mb-2 leading-tight">{{ product.name }}</h1>
 
-                    <v-expansion-panels variant="accordion" class="border rounded-xl overflow-hidden" multiple
-                        v-model="panel">
-                        <v-expansion-panel v-if="product.details" title="Detalhes" :text="product.details"
-                            elevation="0" />
-                        <v-expansion-panel title="Entrega e Pagamento" elevation="0">
-                            <template v-slot:text>
-                                <p class="text-caption">
-                                    Este estabelecimento realiza entregas locais. O pagamento é combinado diretamente
-                                    via
-                                    WhatsApp.
-                                    Aceitamos Pix, Cartão e Dinheiro na entrega.
-                                </p>
-                            </template>
-                        </v-expansion-panel>
-                    </v-expansion-panels>
-                </v-col>
-            </div>
+                        <div class="mt-6 mb-8">
+                            <div class="text-h3 font-weight-bold text-primary">
+                                {{ formatCurrency(product.price) }}
+                            </div>
+                            <div class="text-caption text-success font-weight-bold mt-1">
+                                <v-icon size="small" icon="mdi-check-circle-outline" class="mr-1"></v-icon>
+                                Estoque disponível para entrega imediata
+                            </div>
+                        </div>
+
+                        <div class="mb-8">
+                            <div class="text-subtitle-2 font-weight-bold mb-3">Escolha a quantidade:</div>
+                            <v-btn-toggle v-model="quantity" mandatory rounded="pill" color="primary" variant="outlined"
+                                block class="qty-toggle">
+                                <v-btn :value="quantity - 1" icon="mdi-minus" size="small"
+                                    @click="quantity > 1 ? quantity-- : null" />
+                                <v-btn disabled class="flex-grow-1 text-h6 font-weight-bold">{{ quantity }}</v-btn>
+                                <v-btn :value="quantity + 1" icon="mdi-plus" size="small" @click="quantity++" />
+                            </v-btn-toggle>
+                        </div>
+
+                        <div class="d-flex flex-column ga-3">
+                            <v-btn block size="x-large" color="primary" rounded="pill" elevation="4"
+                                class="text-none font-weight-bold py-7" prepend-icon="mdi-whatsapp" @click="buyNow">
+                                Pedir via WhatsApp
+                            </v-btn>
+
+                            <v-btn block size="x-large" variant="tonal" color="primary" rounded="pill"
+                                class="text-none font-weight-bold" prepend-icon="mdi-cart-plus" @click="addToCart">
+                                Adicionar ao Carrinho
+                            </v-btn>
+                        </div>
+
+                        <v-divider class="my-8" />
+
+                        <v-expansion-panels variant="accordion" v-model="panel" multiple flat class="compact-panels">
+                            <v-expansion-panel elevation="0">
+                                <v-expansion-panel-title class="font-weight-bold text-body-2">
+                                    <v-icon icon="mdi-truck-delivery-outline" class="mr-2" color="primary"></v-icon>
+                                    Entrega Local
+                                </v-expansion-panel-title>
+                                <v-expansion-panel-text class="text-caption opacity-70">
+                                    Enviamos para toda a região. O valor do frete e o prazo são combinados diretamente
+                                    no seu WhatsApp após o pedido.
+                                </v-expansion-panel-text>
+                            </v-expansion-panel>
+
+                            <v-expansion-panel elevation="0">
+                                <v-expansion-panel-title class="font-weight-bold text-body-2">
+                                    <v-icon icon="mdi-shield-check-outline" class="mr-2" color="primary"></v-icon>
+                                    Pagamento Seguro
+                                </v-expansion-panel-title>
+                                <v-expansion-panel-text class="text-caption opacity-70">
+                                    Pague apenas ao receber ou via Pix direto para o lojista. Aceitamos Cartões e
+                                    Dinheiro.
+                                </v-expansion-panel-text>
+                            </v-expansion-panel>
+                        </v-expansion-panels>
+                    </v-card>
+                </div>
+            </v-col>
         </v-row>
     </v-container>
 
-    <v-footer v-if="product && !loading" app class="hidden-md-and-up pa-3 border-t bg-surface" elevation="10">
-        <div class="d-flex w-100 ga-2 align-center">
+    <v-footer v-if="product && !loading" app class="hidden-md-and-up pa-3 border-t bg-surface" elevation="24">
+        <div class="d-flex w-100 ga-3 align-center">
             <div class="flex-grow-1">
-                <div class="text-caption opacity-70">Total</div>
-                <div class="text-h6 font-weight-bold">{{ formatCurrency(product.price * quantity) }}</div>
+                <div class="text-caption opacity-60 font-weight-bold">Total ({{ quantity }} un)</div>
+                <div class="text-h6 font-weight-bold text-primary">{{ formatCurrency(product.price * quantity) }}</div>
             </div>
-            <v-btn color="primary" rounded="pill" size="large" class="px-8 text-none font-weight-bold" @click="buyNow">
-                Pedir via Zap
+            <v-btn color="primary" rounded="pill" size="large" class="px-8 text-none font-weight-black" elevation="0"
+                @click="buyNow">
+                Finalizar Pedido
             </v-btn>
         </div>
     </v-footer>
 </template>
 
 <style scoped>
-.transition-swing {
-    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.5, 1);
+.sticky-top {
+    position: sticky;
+    top: 100px;
+    /* Ajuste conforme a altura da sua navbar */
+    z-index: 5;
+}
+
+.pre-line {
+    white-space: pre-line;
 }
 
 .leading-relaxed {
-    line-height: 1.65 !important;
+    line-height: 1.75 !important;
 }
 
-/* Efeito de borda no botão de quantidade */
-:deep(.v-btn-group--divided .v-btn) {
-    border-color: rgba(var(--v-theme-primary), 0.2) !important;
+.spec-table tr:nth-child(even) {
+    background-color: rgba(var(--v-theme-primary), 0.02);
 }
 
-/* Esconde scrollbar da galeria */
-:deep(.v-slide-group__content) {
-    padding-bottom: 4px;
+.spec-table td {
+    padding: 12px 16px !important;
+    border-bottom: 1px solid rgba(var(--v-border-color), 0.08) !important;
+}
+
+.qty-toggle :deep(.v-btn) {
+    height: 54px !important;
+}
+
+.compact-panels :deep(.v-expansion-panel-title) {
+    padding: 12px 0 !important;
+    min-height: auto !important;
+}
+
+.compact-panels :deep(.v-expansion-panel-text__wrapper) {
+    padding: 8px 0 16px 0 !important;
+}
+
+@media (max-width: 960px) {
+    .sticky-top {
+        position: static;
+    }
 }
 </style>
