@@ -92,7 +92,7 @@ onMounted(loadProduct);
             </v-col>
         </v-row>
 
-        <v-row v-else-if="product" spacing="6" justify="center">
+        <v-row v-else-if="product" spacing="6" justify="center" class="flex-wrap-reverse">
             <v-col cols="12" md="7" lg="8">
                 <v-card variant="flat" rounded="xl" class="overflow-hidden border mb-8">
                     <v-img :src="activeImage || 'https://placehold.co/800x800?text=Sem+Imagem'" height="550" cover
