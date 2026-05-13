@@ -22,9 +22,11 @@ const visibleCartCount = computed(() =>
 );
 const storeName = computed(() => useStore.settings.storeName || 'Minha Loja');
 
-onMounted(() => {
-    const slug = window.location.hostname.split('.')[0];
-    useStore.bootstrap({ slug });
+onMounted(async () => {
+    const value = route.params.storeSlug;
+    console.log('Detected store slug:', value);
+    await useStore.bootstrap({ slug: typeof value === 'string' ? value : value[0] });
+    console.log('Storefront settings loaded:', useStore.settings);
 });
 </script>
 
@@ -105,7 +107,7 @@ onMounted(() => {
 
 @media (max-width: 600px) {
     .store-info-text {
-        max-width: 100px;
+        max-width: 120px;
     }
 }
 </style>

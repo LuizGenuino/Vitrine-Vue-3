@@ -13,8 +13,8 @@ export const useStorefrontStore = defineStore('storefront', () => {
 
     // --- COMPOSITION: Theme Management ---
     const themeStyles = computed(() => ({
-        '--brand-primary': settings.value.primaryColor,
-        '--brand-secondary': settings.value.secondaryColor,
+        '--brand-primary': settings.value.branding.primaryColor,
+        '--brand-secondary': settings.value.branding.secondaryColor,
     }));
 
     // --- ACTIONS: Private Fetchers ---

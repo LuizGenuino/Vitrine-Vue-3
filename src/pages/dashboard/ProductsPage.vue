@@ -16,7 +16,7 @@ import type { Category, Product, Subcategory } from '@/types';
 import { gerarCodigo } from '@/utils/generate';
 
 const authStore = useAuthStore();
-const storefrontStore = useStorefrontStore();
+const useStore = useStorefrontStore();
 const feedbackStore = useFeedbackStore();
 const { uploading, uploadMany } = useImageUpload();
 const drawer = ref(false);
@@ -74,7 +74,7 @@ const {
     canCreateProduct,
     isNearLimit,
     isLimitReached,
-} = usePlanAccess(computed(() => storefrontStore.settings.activePlanId), computed(() => products.value.length));
+} = usePlanAccess(computed(() => useStore.settings.activePlanId), computed(() => products.value.length));
 
 const canSave = computed(() => Boolean(form.name && form.description && Number(form.price) > 0 && form.imageUrls.length));
 const isEditing = computed(() => Boolean(form.id));
@@ -94,7 +94,6 @@ async function loadData() {
     loading.value = true;
     try {
         const ownerId = authStore.user.uid;
-        await storefrontStore.loadByOwner(ownerId);
         [products.value, categories.value, subcategories.value] = await Promise.all([
             productService.listByOwner(ownerId),
             categoryService.listCategories(ownerId),

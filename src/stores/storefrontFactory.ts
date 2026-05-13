@@ -6,9 +6,18 @@ export const createDefaultSettings = (overrides: Partial<StoreSettings> = {}): S
     storeName: 'Sua vitrine',
     title: 'Produtos com apresentação premium',
     subtitle: 'Personalize a experiência e venda rápido pelo WhatsApp.',
-    primaryColor: '#4F46E5',
-    secondaryColor: '#14B8A6',
-    whatsappNumber: '',
+    branding: {
+        primaryColor: '#4F46E5',
+        secondaryColor: '#14B8A6'
+    },
+    channels: {
+        whatsappNumber: ''
+    },
     activePlanId: 'free',
+    metrics: {
+        activeProductsCount: 0,
+        productsCount: 0,
+        teamMembersCount: 0
+    },
     ...overrides,
 });
