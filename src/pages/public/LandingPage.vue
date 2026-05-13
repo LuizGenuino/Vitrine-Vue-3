@@ -111,7 +111,7 @@ const features = [
                         Em menos de 5 minutos você configura sua vitrine e começa a compartilhar seu link exclusivo. Sem
                         burocracia, sem taxas de entrega.
                     </p>
-                    <v-btn color="white" size="x-large" variant="flat" class="text-primary font-weight-bold px-12"
+                    <v-btn color="white" size="large" variant="flat" class="text-primary font-weight-bold px-12"
                         :to="{ name: 'register' }">
                         Criar minha vitrine agora
                     </v-btn>

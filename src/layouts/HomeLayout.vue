@@ -1,8 +1,11 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import ThemeToggle from '@/components/base/ThemeToggle.vue';
+import { useDisplay } from 'vuetify';
 
 const drawer = ref(false);
+
+const display = useDisplay()
 
 const navLinks = [
     { title: 'Como funciona', to: '#como-funciona' },
@@ -39,7 +42,7 @@ const navLinks = [
                     </div>
                 </router-link>
 
-                <div class="hidden-md-and-down d-flex align-center ga-2">
+                <div v-if="display.mdAndDown" class="d-none d-md-flex align-center ga-2">
                     <v-btn v-for="link in navLinks" :key="link.title" variant="text" class="text-none">
                         {{ link.title }}
                     </v-btn>
@@ -48,7 +51,7 @@ const navLinks = [
                 <div class="d-flex align-center ga-1 ga-sm-2">
                     <ThemeToggle />
 
-                    <div class="hidden-sm-and-down d-flex align-center ga-2">
+                    <div v-if="display.mdAndDown" class="hidden-sm-and-down d-none d-md-flex align-center ga-2">
                         <v-btn variant="text" font-weight-bold :to="{ name: 'login' }" class="text-none">Entrar</v-btn>
                         <v-btn color="primary" rounded="pill" elevation="0" :to="{ name: 'register' }"
                             class="text-none px-6">
