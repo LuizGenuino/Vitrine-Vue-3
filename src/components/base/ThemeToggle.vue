@@ -9,10 +9,10 @@ const label = computed(() => (uiStore.themeMode === 'light' ? 'Modo escuro' : 'M
 </script>
 
 <template>
-  <v-tooltip location="bottom">
-    <template #activator="{ props }">
-      <v-btn v-bind="props" :icon="icon" variant="text" @click="uiStore.toggleTheme" />
-    </template>
-    <span>{{ label }}</span>
-  </v-tooltip>
+    <v-tooltip location="bottom">
+        <template #activator="{ props }">
+            <v-btn v-bind="props" :icon="icon" variant="text" @click="uiStore.toggleTheme" />
+        </template>
+        <span>{{ label }}</span>
+    </v-tooltip>
 </template>
