@@ -9,13 +9,14 @@ import type { Category, Subcategory } from '@/types';
 
 const authStore = useAuthStore();
 const loading = ref(false);
+const btnLoading = ref<string | null>(null); // Loading individual para botões
 const categories = ref<Category[]>([]);
 const subcategories = ref<Subcategory[]>([]);
 
 const categoryForm = reactive({ name: '' });
-const subcategoryForm = reactive({ name: '', categoryId: '' });
+const subcategoryForms = reactive<Record<string, string>>({}); // Formulários por categoria
 
-const groupedSubcategories = computed(() =>
+const groupedData = computed(() =>
     categories.value.map((category) => ({
         ...category,
         subcategories: subcategories.value.filter((item) => item.categoryId === category.id),
@@ -26,60 +27,60 @@ async function loadData() {
     if (!authStore.user?.uid) return;
     loading.value = true;
     try {
-        categories.value = await categoryService.listCategories(authStore.user.uid);
-        subcategories.value = await categoryService.listSubcategories(authStore.user.uid);
-    } catch (error) {
-        console.error('Error loading data:', error);
+        const [cats, subs] = await Promise.all([
+            categoryService.listCategories(authStore.user.uid),
+            categoryService.listSubcategories(authStore.user.uid)
+        ]);
+        categories.value = cats;
+        subcategories.value = subs;
     } finally {
         loading.value = false;
     }
 }
 
-async function createCategory() {
-    if (!authStore.user?.uid || !categoryForm.name) return;
-    await categoryService.saveCategory({
-        ownerId: authStore.user.uid,
-        name: categoryForm.name,
-        slug: slugify(categoryForm.name),
-        order: categories.value.length + 1,
-    });
-    categoryForm.name = '';
-    await loadData();
+async function handleAction(id: string, action: () => Promise<void>) {
+    btnLoading.value = id;
+    try { await action(); await loadData(); }
+    finally { btnLoading.value = null; }
 }
 
-async function saveCategory(category: Category) {
-    await categoryService.saveCategory({ ...category, slug: slugify(category.name) });
-    await loadData();
+async function createCategory() {
+    if (!authStore.user?.uid || !categoryForm.name) return;
+    await handleAction('create-cat', async () => {
+        await categoryService.saveCategory({
+            ownerId: authStore.user!.uid,
+            name: categoryForm.name,
+            slug: slugify(categoryForm.name),
+            order: categories.value.length + 1,
+        });
+        categoryForm.name = '';
+    });
+}
+
+async function quickCreateSub(categoryId: string) {
+    const name = subcategoryForms[categoryId];
+    if (!authStore.user?.uid || !name) return;
+
+    await handleAction(`sub-new-${categoryId}`, async () => {
+        await categoryService.saveSubcategory({
+            ownerId: authStore.user!.uid,
+            name: name,
+            slug: slugify(name),
+            categoryId: categoryId,
+            order: 99,
+        });
+        subcategoryForms[categoryId] = '';
+    });
 }
 
 async function removeCategory(id?: string) {
+    if (!id || !confirm('Excluir esta categoria removerá o vínculo com os produtos. Confirmar?')) return;
+    await handleAction(`del-${id}`, () => categoryService.removeCategory(id));
+}
+
+async function removeSub(id?: string) {
     if (!id) return;
-    await categoryService.removeCategory(id);
-    await loadData();
-}
-
-async function createSubcategory() {
-    if (!authStore.user?.uid || !subcategoryForm.name || !subcategoryForm.categoryId) return;
-    await categoryService.saveSubcategory({
-        ownerId: authStore.user.uid,
-        name: subcategoryForm.name,
-        slug: slugify(subcategoryForm.name),
-        categoryId: subcategoryForm.categoryId,
-        order: subcategories.value.length + 1,
-    });
-    subcategoryForm.name = '';
-    await loadData();
-}
-
-async function saveSubcategory(subcategory: Subcategory) {
-    await categoryService.saveSubcategory({ ...subcategory, slug: slugify(subcategory.name) });
-    await loadData();
-}
-
-async function removeSubcategory(id?: string) {
-    if (!id) return;
-    await categoryService.removeSubcategory(id);
-    await loadData();
+    await handleAction(`del-sub-${id}`, () => categoryService.removeSubcategory(id));
 }
 
 onMounted(loadData);
@@ -87,60 +88,103 @@ onMounted(loadData);
 
 <template>
     <div class="d-flex flex-column ga-6">
-        <AppSectionCard title="Categorias" subtitle="Estruture sua vitrine com navegação objetiva.">
-            <v-row>
-                <v-col cols="12" md="8">
-                    <v-text-field v-model="categoryForm.name" label="Nova categoria" />
-                </v-col>
-                <v-col cols="12" md="4">
-                    <v-btn block color="primary" size="large" @click="createCategory">Adicionar categoria</v-btn>
-                </v-col>
-            </v-row>
-
-            <div v-if="groupedSubcategories.length" class="d-flex flex-column ga-4 mt-4">
-                <v-card v-for="category in groupedSubcategories" :key="category.id" variant="outlined" class="pa-4">
-                    <div class="d-flex flex-column flex-md-row ga-3 align-start align-md-center justify-space-between">
-                        <v-text-field v-model="category.name" hide-details label="Nome da categoria"
-                            class="flex-grow-1 w-100" />
-                        <div class="d-flex ga-2">
-                            <v-btn variant="tonal" color="success" @click="saveCategory(category)">Salvar</v-btn>
-                            <v-btn variant="text" color="error" @click="removeCategory(category.id)">Excluir</v-btn>
-                        </div>
-                    </div>
-                    <v-divider class="ma-4" />
-                    <div class="mt-4 ml-6 d-flex flex-column ga-3">
-                        <div v-for="sub in category.subcategories" :key="sub.id"
-                            class="d-flex flex-column flex-md-row ga-3 align-start align-md-center mt-4">
-                            <v-text-field v-model="sub.name" hide-details label="Subcategoria"
-                                class="flex-grow-1 w-100" />
-                            <div class="d-flex ga-2">
-                                <v-btn size="small" variant="tonal" color="success"
-                                    @click="saveSubcategory(sub)">Salvar</v-btn>
-                                <v-btn size="small" variant="text" color="error"
-                                    @click="removeSubcategory(sub.id)">Excluir</v-btn>
-                            </div>
-                        </div>
-                    </div>
-                </v-card>
-            </div>
-
-            <EmptyState v-else title="Nenhuma categoria criada"
-                description="Cadastre a primeira categoria para organizar seus produtos e melhorar a navegação da vitrine." />
-        </AppSectionCard>
-
-        <AppSectionCard title="Subcategorias" subtitle="Crie grupos secundários sem poluir a gestão.">
-            <v-row>
-                <v-col cols="12" md="4">
-                    <v-select v-model="subcategoryForm.categoryId" :items="categories" item-title="name" item-value="id"
-                        label="Categoria pai" />
+        <v-card rounded="xl" border flat class="pa-6 bg-surface">
+            <v-row align="center">
+                <v-col cols="12" md="7">
+                    <h2 class="text-h5 font-weight-black mb-1">Organize seu Catálogo</h2>
+                    <p class="text-body-2 text-medium-emphasis">
+                        Crie grupos e subgrupos para ajudar seu cliente a encontrar produtos em segundos.
+                    </p>
                 </v-col>
                 <v-col cols="12" md="5">
-                    <v-text-field v-model="subcategoryForm.name" label="Nova subcategoria" />
-                </v-col>
-                <v-col cols="12" md="3">
-                    <v-btn block color="primary" size="large" @click="createSubcategory">Adicionar</v-btn>
+                    <v-text-field v-model="categoryForm.name" label="Nome da nova categoria"
+                        placeholder="Ex: Camisetas, Hambúrgueres..." hide-details rounded="pill" variant="outlined"
+                        @keyup.enter="createCategory">
+                        <template #append-inner>
+                            <v-btn color="primary" variant="flat" rounded="pill" size="small" class="text-none"
+                                :loading="btnLoading === 'create-cat'" @click="createCategory">
+                                Adicionar
+                            </v-btn>
+                        </template>
+                    </v-text-field>
                 </v-col>
             </v-row>
-        </AppSectionCard>
+        </v-card>
+
+        <div v-if="loading && !categories.length" class="d-flex justify-center py-10">
+            <v-progress-circular indeterminate color="primary" />
+        </div>
+
+        <div v-else-if="groupedData.length" class="d-flex flex-column ga-4">
+            <v-card v-for="category in groupedData" :key="category.id" rounded="xl" border flat class="overflow-hidden">
+                <div class="pa-4 bg-grey-lighten-4 d-flex align-center justify-space-between">
+                    <div class="d-flex align-center ga-3 flex-grow-1">
+                        <v-icon icon="mdi-drag-variant" color="medium-emphasis" class="cursor-move" />
+                        <v-text-field v-model="category.name" variant="plain" hide-details
+                            class="text-h6 font-weight-bold p-0 m-0 custom-input"
+                            @blur="categoryService.saveCategory(category)" />
+                    </div>
+                    <div class="d-flex align-center ga-2">
+                        <v-btn icon="mdi-trash-can-outline" variant="text" color="error" size="small"
+                            :loading="btnLoading === `del-${category.id}`" @click="removeCategory(category.id)" />
+                    </div>
+                </div>
+
+                <div class="pa-6 pt-2">
+                    <div class="text-overline text-medium-emphasis mb-4">Subcategorias</div>
+
+                    <div class="d-flex flex-wrap ga-2 mb-4">
+                        <v-chip v-for="sub in category.subcategories" :key="sub.id" closable variant="tonal"
+                            color="primary" class="font-weight-medium" @click:close="removeSub(sub.id)">
+                            {{ sub.name }}
+                        </v-chip>
+
+                        <v-text-field v-model="subcategoryForms[category.id!]" placeholder="Adicionar sub..."
+                            variant="underlined" density="compact" hide-details class="ml-2 quick-sub-input"
+                            style="max-width: 150px" @keyup.enter="quickCreateSub(category.id!)">
+                            <template #append-inner>
+                                <v-icon icon="mdi-plus" size="small" class="cursor-pointer"
+                                    @click="quickCreateSub(category.id!)" />
+                            </template>
+                        </v-text-field>
+                    </div>
+
+                    <div v-if="!category.subcategories.length" class="text-caption text-disabled italic">
+                        Nenhuma subcategoria para {{ category.name }}.
+                    </div>
+                </div>
+            </v-card>
+        </div>
+
+        <EmptyState v-else title="Seu catálogo está vazio"
+            description="Comece criando categorias como 'Promoções' ou 'Novidades' para organizar seus produtos." />
     </div>
 </template>
+
+<style scoped>
+.custom-input :deep(input) {
+    padding: 0 !important;
+    min-height: auto !important;
+}
+
+.quick-sub-input :deep(input) {
+    font-size: 0.875rem !important;
+}
+
+.cursor-move {
+    cursor: grab;
+}
+
+.cursor-move:active {
+    cursor: grabbing;
+}
+
+/* Transição suave para os cards */
+.v-card {
+    transition: all 0.2s ease;
+}
+
+.v-card:hover {
+    border-color: rgba(var(--v-theme-primary), 0.5) !important;
+}
+</style>

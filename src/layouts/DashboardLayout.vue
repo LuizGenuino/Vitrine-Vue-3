@@ -76,7 +76,7 @@ async function handleLogout() {
                     <template v-slot:activator="{ props }">
                         <v-avatar v-bind="props" color="primary" size="32" class="cursor-pointer elevation-2">
                             <span class="text-caption text-white">{{ authStore.user?.email?.charAt(0).toUpperCase()
-                                }}</span>
+                            }}</span>
                         </v-avatar>
                     </template>
                     <v-list width="200" rounded="lg" class="mt-2">
