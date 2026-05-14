@@ -68,14 +68,29 @@ async function loadCounts(ownerId: string) {
         categoryService.listCategories(ownerId),
         productService.listByOwner(ownerId),
     ]);
+
     categoriesCount.value = categories.length;
     productsCount.value = products.length;
+
+    const formdata = {
+        ownerId: ownerId,
+        slug: storefrontStore.settings.slug,
+        storeName: storefrontStore.settings.storeName,
+        title: storefrontStore.settings.title,
+        subtitle: storefrontStore.settings.subtitle,
+        primaryColor: storefrontStore.settings.branding.primaryColor,
+        secondaryColor: storefrontStore.settings.branding.secondaryColor,
+        logoUrl: storefrontStore.settings.branding.logoUrl,
+        bannerUrl: storefrontStore.settings.branding.bannerUrl,
+        whatsappNumber: storefrontStore.settings.channels.whatsappNumber,
+        activePlanId: storefrontStore.settings.planSnapshot?.name,
+    } as StoreSettingsForm
+    patchForm(formdata);
 }
 
 onMounted(async () => {
-    authStore.init();
+    await authStore.init();
     if (!authStore.user?.uid) return;
-    patchForm({ ...storefrontStore.settings, ownerId: authStore.user.uid });
     await loadCounts(authStore.user.uid);
 });
 
