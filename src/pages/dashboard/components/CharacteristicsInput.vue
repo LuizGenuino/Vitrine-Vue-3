@@ -52,6 +52,7 @@ const addRow = async () => {
 };
 
 const removeRow = (index: number) => {
+    console.log("foi")
     localItems.value.splice(index, 1);
     syncToExternal();
 };
@@ -63,16 +64,17 @@ const handleEnter = (index: number) => {
 };
 
 // --- WATCHERS ---
-// Sincroniza apenas quando o valor externo muda drasticamente (ex: reset do form)
-watch(() => modelValue.value, (newVal) => {
-    const currentSerialized = localItems.value
-        .filter(i => i.key || i.value)
-        .map(i => `${i.key}: ${i.value}`);
+// // Sincroniza apenas quando o valor externo muda drasticamente (ex: reset do form)
+// watch(() => modelValue.value, (newVal) => {
+//     const currentSerialized = localItems.value
+//         .filter(i => i.key || i.value)
+//         .map(i => `${i.key}: ${i.value}`);
 
-    if (JSON.stringify(newVal) !== JSON.stringify(currentSerialized)) {
-        localItems.value = parseToInternal(newVal);
-    }
-}, { deep: true });
+//     if (JSON.stringify(newVal) !== JSON.stringify(currentSerialized)) {
+//         console.log("aqui")
+//         localItems.value = parseToInternal(newVal);
+//     }
+// }, { deep: true });
 
 onMounted(() => {
     if (modelValue.value.length > 0) {

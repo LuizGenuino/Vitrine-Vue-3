@@ -92,7 +92,7 @@ async function submit() {
                 </v-chip>
             </v-toolbar>
 
-            <v-tabs v-model="activeTab" color="primary" grow border-b>
+            <v-tabs v-model="activeTab" color="primary" align-tabs="title">
                 <v-tab :value="0" class="text-none">1. Informações Básicas</v-tab>
                 <v-tab :value="1" class="text-none">2. Mídia (Fotos)</v-tab>
                 <v-tab :value="2" class="text-none">3. Detalhes & Ficha Técnica</v-tab>

@@ -210,12 +210,12 @@ onMounted(loadData);
                     <v-text-field v-model="search" prepend-inner-icon="mdi-magnify" placeholder="Buscar produto..."
                         hide-details variant="solo-filled" flat rounded="pill" />
                 </v-col>
-                <v-col cols="6" md="3">
+                <v-col cols="12" md="3">
                     <v-select v-model="categoryFilter" :items="[{ name: 'Todas Categorias', id: 'all' }, ...categories]"
                         item-title="name" item-value="id" hide-details variant="outlined" rounded="pill"
                         density="compact" />
                 </v-col>
-                <v-col cols="6" md="2">
+                <v-col cols="12" md="2">
                     <v-select v-model="statusFilter"
                         :items="[{ title: 'Todos', value: 'all' }, { title: 'Ativos', value: 'active' }, { title: 'Rascunhos', value: 'draft' }]"
                         hide-details variant="outlined" rounded="pill" density="compact" />
@@ -256,7 +256,7 @@ onMounted(loadData);
                         </td>
                         <td class="font-weight-bold">{{ formatCurrency(product.price) }}</td>
                         <td>
-                            <v-chip size="x-small" :color="product.quantity <= 5 ? 'warning' : 'default'"
+                            <v-chip size="x-small" :color="product.quantity <= 5 ? 'warning' : 'info'"
                                 variant="flat">
                                 {{ product.quantity }} un
                             </v-chip>

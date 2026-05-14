@@ -73,7 +73,7 @@ function addToCart() {
 
 function buyNow() {
     if (!product.value) return;
-    window.open(buildProductLink(storefrontStore.settings.channels.whatsappNumber, product.value), '_blank');
+    window.open(buildProductLink(storefrontStore.settings.channels.whatsappNumber, product.value, quantity.value), '_blank');
 }
 
 onMounted(loadProduct);
@@ -162,7 +162,7 @@ onMounted(loadProduct);
                                 block class="qty-toggle">
                                 <v-btn :value="quantity - 1" icon="mdi-minus" size="small"
                                     @click="quantity > 1 ? quantity-- : null" />
-                                <v-btn disabled class="flex-grow-1 text-h6 font-weight-bold">{{ quantity }}</v-btn>
+                                <p class="flex-grow-1 text-h6 font-weight-bold py-2 px-4">{{ quantity }}</p>
                                 <v-btn :value="quantity + 1" icon="mdi-plus" size="small" @click="quantity++" />
                             </v-btn-toggle>
                         </div>
@@ -196,11 +196,10 @@ onMounted(loadProduct);
                             <v-expansion-panel elevation="0">
                                 <v-expansion-panel-title class="font-weight-bold text-body-2">
                                     <v-icon icon="mdi-shield-check-outline" class="mr-2" color="primary"></v-icon>
-                                    Pagamento Seguro
+                                    Pagamento Combinado
                                 </v-expansion-panel-title>
                                 <v-expansion-panel-text class="text-caption opacity-70">
-                                    Pague apenas ao receber ou via Pix direto para o lojista. Aceitamos Cartões e
-                                    Dinheiro.
+                                    Combine com o vendedor a forma de pagamento ao finalizar o pedido
                                 </v-expansion-panel-text>
                             </v-expansion-panel>
                         </v-expansion-panels>
