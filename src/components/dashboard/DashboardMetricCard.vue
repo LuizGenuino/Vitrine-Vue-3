@@ -2,7 +2,7 @@
 defineProps<{
     label: string;
     value: string | number;
-    description: string;
+    description?: string;
     icon: string;
     color?: string;
 }>();
@@ -14,7 +14,7 @@ defineProps<{
             <div>
                 <div class="text-body-2 text-medium-emphasis">{{ label }}</div>
                 <div class="text-h4 font-weight-bold mt-2">{{ value }}</div>
-                <div class="text-body-2 text-medium-emphasis mt-3">{{ description }}</div>
+                <div v-if="description" class="text-body-2 text-medium-emphasis mt-3">{{ description }}</div>
             </div>
             <v-avatar :color="color || 'primary'" variant="tonal" size="44">
                 <v-icon :icon="icon" />

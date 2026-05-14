@@ -14,8 +14,9 @@ import DashboardMetricCard from '@/components/dashboard/DashboardMetricCard.vue'
 import OnboardingChecklist from '@/components/dashboard/OnboardingChecklist.vue';
 
 import type { Category, Product } from '@/types';
+import { useFeedbackStore } from '@/stores/feedback';
 
-
+const feedbackStore = useFeedbackStore();
 const router = useRouter();
 const authStore = useAuthStore();
 const storefrontStore = useStorefrontStore();
@@ -78,6 +79,15 @@ async function populateDemo() {
     }
 }
 
+async function copiarLink() {
+    try {
+        await navigator.clipboard.writeText(storefrontStore.settings.slug ? `${window.location.origin}/s/${storefrontStore.settings.slug}` : '');
+        feedbackStore.show(`Link copiado com sucesso!`, 'success');
+    } catch (err) {
+        console.error('Erro ao copiar: ', err);
+    }
+}
+
 onMounted(loadData);
 </script>
 
@@ -115,8 +125,7 @@ onMounted(loadData);
                     description="Categorias para filtros e navegação." color="secondary" />
             </v-col>
             <v-col cols="12" sm="6" lg="3">
-                <DashboardMetricCard label="Itens em Estoque"
-                    description="Soma de todos os produtos"
+                <DashboardMetricCard label="Itens em Estoque" description="Soma de todos os produtos"
                     :value="products.reduce((acc, p) => acc + (p.quantity || 0), 0)" icon="mdi-package-variant"
                     color="success" />
             </v-col>
@@ -184,8 +193,8 @@ onMounted(loadData);
                         <v-list-item prepend-icon="mdi-database-import-outline" title="Popular Dados Demo"
                             subtitle="Teste o visual da loja rapidamente" rounded="lg" class="mb-2 border"
                             :loading="seeding" @click="populateDemo" />
-                        <v-list-item prepend-icon="mdi-share-variant-outline" title="Compartilhar Link"
-                            subtitle="Copiar link do WhatsApp" rounded="lg" class="border" />
+                        <v-list-item prepend-icon="mdi-share-variant-outline" title="Compartilhar Link da Loja"
+                            subtitle="Copiar link no WhatsApp" rounded="lg" class="border" @click="copiarLink" />
                     </v-list>
                 </v-card>
             </v-col>
