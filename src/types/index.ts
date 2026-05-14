@@ -1,5 +1,24 @@
 export type ThemeMode = 'light' | 'dark';
 
+
+export interface StoreSettingsForm {
+    id?: string;
+    ownerId: string,
+    slug: string,
+    storeName: string,
+    title: string,
+    subtitle: string,
+    primaryColor: string,
+    secondaryColor: string,
+    logoUrl: string,
+    bannerUrl: string,
+    whatsappNumber: string,
+    activePlanId?: string;
+    customDomain?: string;
+    createdAt?: string;
+    updatedAt?: string;
+}
+
 export interface StoreSettings {
     id?: string;
     ownerId: string;
@@ -9,7 +28,7 @@ export interface StoreSettings {
     subtitle: string;
     branding: StoreSettingsBranding;
     channels: StoreSettingsChannels;
-    metrics: StoreSettingsMetrics;
+    metrics?: StoreSettingsMetrics;
     planSnapshot?: StoreSettingsPlanSnapshot;
     state?: 'active' | 'inactive';
     visibility?: 'public' | 'private';

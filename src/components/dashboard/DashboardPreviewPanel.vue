@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import type { StoreSettings } from '@/types';
+import type { StoreSettingsForm } from '@/types';
 import { formatCurrency } from '@/utils/format';
 
 const props = defineProps<{
-    settings: StoreSettings;
+    settings: StoreSettingsForm;
 }>();
 
 const sampleProducts = [
@@ -18,18 +18,16 @@ const sampleProducts = [
         <div class="text-overline text-medium-emphasis mb-2">Preview em tempo real</div>
         <v-card class="overflow-hidden" rounded="xl">
             <div class="position-relative">
-                <v-img v-if="props.settings.branding.bannerUrl" :src="props.settings.branding.bannerUrl" height="240"
-                    cover />
+                <v-img v-if="props.settings.bannerUrl" :src="props.settings.bannerUrl" height="240" cover />
                 <div class="pa-5 pa-md-8" :style="{
-                    background: props.settings.branding.bannerUrl
-                        ? `linear-gradient(135deg, ${props.settings.branding.primaryColor}CC, ${props.settings.branding.secondaryColor}CC)`
-                        : `linear-gradient(135deg, ${props.settings.branding.primaryColor}, ${props.settings.branding.secondaryColor})`,
-                    marginTop: props.settings.branding.bannerUrl ? '-240px' : '0'
+                    background: props.settings.bannerUrl
+                        ? `linear-gradient(135deg, ${props.settings.primaryColor}CC, ${props.settings.secondaryColor}CC)`
+                        : `linear-gradient(135deg, ${props.settings.primaryColor}, ${props.settings.secondaryColor})`,
+                    marginTop: props.settings.bannerUrl ? '-240px' : '0'
                 }">
                     <div class="d-flex align-center ga-4">
                         <v-avatar size="56" color="white">
-                            <v-img v-if="props.settings.branding.logoUrl" :src="props.settings.branding.logoUrl"
-                                cover />
+                            <v-img v-if="props.settings.logoUrl" :src="props.settings.logoUrl" cover />
                             <span v-else class="text-h6 font-weight-bold">{{ props.settings.storeName?.slice(0, 1) ||
                                 'S' }}</span>
                         </v-avatar>
@@ -51,7 +49,7 @@ const sampleProducts = [
                             <div class="rounded-lg mb-3" style="height: 120px; background: #e2e8f0" />
                             <div class="font-weight-medium">{{ item.name }}</div>
                             <div class="mt-1 text-body-2 text-medium-emphasis">Categoria premium</div>
-                            <div class="mt-3 font-weight-bold" :style="{ color: props.settings.branding.primaryColor }">
+                            <div class="mt-3 font-weight-bold" :style="{ color: props.settings.primaryColor }">
                                 {{ formatCurrency(item.price) }}
                             </div>
                         </v-card>

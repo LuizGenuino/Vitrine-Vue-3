@@ -1,6 +1,6 @@
 import { computed, ref, shallowRef } from 'vue';
 import { defineStore } from 'pinia';
-import type { StoreSettings } from '@/types';
+import type { StoreSettings, StoreSettingsForm } from '@/types';
 import { storeService } from '@/services/storeService';
 import { createDefaultSettings } from './storefrontFactory';
 
@@ -53,7 +53,7 @@ export const useStorefrontStore = defineStore('storefront', () => {
     }
 
     // --- MUTATIONS ---
-    function patchSettings(payload: Partial<StoreSettings>) {
+    function patchSettings(payload: Partial<StoreSettingsForm>) {
         settings.value = {
             ...settings.value,
             ...payload,
