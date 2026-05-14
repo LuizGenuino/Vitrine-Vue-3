@@ -93,6 +93,8 @@ watch(() => storefront.settings.ownerId, (newId) => {
                             <div class="text-center text-md-left">
                                 <h1 class="text-h3 font-weight-black mb-1">{{ storefront.settings.storeName }}</h1>
                                 <p class="text-body-1 opacity-90">{{ storefront.settings.title }}</p>
+                                <div class="text-white" style="max-width: 720px; opacity: 0.88">{{
+                                    storefront.settings.subtitle }}</div>
                                 <v-chip size="small" color="success" variant="flat" class="mt-2 font-weight-bold">
                                     <v-icon start icon="mdi-whatsapp"></v-icon> Pedidos via WhatsApp
                                 </v-chip>
@@ -101,7 +103,7 @@ watch(() => storefront.settings.ownerId, (newId) => {
                     </v-container>
                 </div>
             </v-img>
-            <div class="pa-6 pa-md-10" :style="{
+            <div v-else class="pa-6 pa-md-10" :style="{
                 background: storefront.settings.branding.primaryColor && storefront.settings.branding.secondaryColor
                     ? `linear-gradient(135deg, ${storefront.settings.branding.primaryColor}CC, ${storefront.settings.branding.secondaryColor}CC)`
                     : `linear-gradient(135deg, ${storefront.settings.branding.primaryColor}, ${storefront.settings.branding.secondaryColor})`
