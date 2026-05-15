@@ -58,7 +58,7 @@ async function handleLogout() {
 <template>
     <v-layout class="bg-background dashboard-container">
 
-        <v-app-bar flat border class="px-md-4">
+        <v-app-bar flat border class="px-4">
             <v-app-bar-nav-icon @click="drawer = !drawer" class="hidden-lg-and-up"></v-app-bar-nav-icon>
 
             <v-toolbar-title class="font-weight-bold d-flex align-center">
@@ -148,7 +148,7 @@ async function handleLogout() {
 
         <v-main class="bg-grey-lighten-4 main-content">
             <div class="scrollable-area">
-                <div class="pa-4 pa-md-8 max-width-container">
+                <div class="pa-8 max-width-container">
                     <v-fade-transition mode="out-in">
                         <router-view />
                     </v-fade-transition>

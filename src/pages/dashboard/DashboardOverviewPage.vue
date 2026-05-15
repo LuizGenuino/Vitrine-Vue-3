@@ -126,7 +126,7 @@ async function copiarLink() {
                         </v-chip>
                     </div>
 
-                    <OnboardingChecklist :steps="steps" :completion="completion" />
+                    <OnboardingChecklist :steps="steps" :completion="completion" class="hidden-sm-and-down" />
 
                     <v-alert v-if="!readyToLaunch" icon="mdi-rocket-launch-outline" color="primary" variant="tonal"
                         rounded="lg" class="mt-6 border-dashed">
