@@ -88,13 +88,13 @@ function addToCart() {
                         <div class="text-caption text-disabled text-decoration-line-through mb-n1" v-if="false">
                             {{ formatCurrency(product.price * 1.2) }}
                         </div>
-                        <div class="text-h6 font-weight-black text-primary">
+                        <div class="text-h6 font-weight-bold text-primary">
                             {{ formatCurrency(product.price) }}
                         </div>
                     </div>
 
                     <v-btn icon="mdi-shopping-outline" color="primary" variant="tonal" size="small" rounded="lg"
-                        :disabled="isOutOfStock" @click.stop="addToCart" ></v-btn>
+                        :disabled="isOutOfStock" @click.stop="addToCart"></v-btn>
                 </div>
             </v-card-text>
         </v-card>

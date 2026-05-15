@@ -86,7 +86,7 @@ async function submit() {
                 <v-toolbar-title class="font-weight-black">
                     {{ product.id ? 'Editar Produto' : 'Cadastrar Novo Produto' }}
                 </v-toolbar-title>
-                <v-spacer></v-spacer>
+                <v-spacer class="hidden-sm-and-down" ></v-spacer>
                 <v-chip v-if="product.id" label size="small" class="mr-4">
                     ID: {{ product.code }}
                 </v-chip>
@@ -105,30 +105,30 @@ async function submit() {
                         <v-window-item :value="0">
                             <v-row class="pt-2">
                                 <v-col cols="12">
-                                    <v-text-field v-model="product.name" label="Nome comercial do produto"
+                                    <v-text-field v-model="product.name" label="Nome comercial do produto*"
                                         placeholder="Ex: Camiseta Oversized Algodão" :rules="[rules.required]"
                                         variant="outlined" />
                                 </v-col>
                                 <v-col cols="12" md="6">
-                                    <v-text-field v-model="product.price" label="Preço de venda" prefix="R$"
+                                    <v-text-field v-model="product.price" label="Preço de venda*" prefix="R$"
                                         type="number" :rules="[rules.required, rules.minPrice]" variant="outlined" />
                                 </v-col>
                                 <v-col cols="12" md="6">
-                                    <v-text-field v-model="product.quantity" label="Estoque disponível" type="number"
+                                    <v-text-field v-model="product.quantity" label="Estoque disponível*" type="number"
                                         variant="outlined" append-inner-icon="mdi-package-variant" />
                                 </v-col>
                                 <v-col cols="12" md="6">
                                     <v-select v-model="product.categoryId" :items="categories" item-title="name"
-                                        item-value="id" label="Categoria Pai" variant="outlined"
-                                        :rules="[rules.required]" />
+                                        item-value="id" label="Categoria Pai" variant="outlined" clearable
+                                         />
                                 </v-col>
                                 <v-col cols="12" md="6">
                                     <v-select v-model="product.subcategoryId" :items="filteredSubcategories"
                                         item-title="name" item-value="id" label="Subcategoria" variant="outlined"
-                                        :disabled="!product.categoryId" />
+                                        :disabled="!product.categoryId" clearable />
                                 </v-col>
                                 <v-col cols="12">
-                                    <v-textarea v-model="product.description" label="Descrição curta (Venda)"
+                                    <v-textarea v-model="product.description" label="Descrição curta (Venda)*"
                                         placeholder="Descreva os benefícios do produto..." rows="3" variant="outlined"
                                         counter="255" :rules="[rules.required]" />
                                 </v-col>

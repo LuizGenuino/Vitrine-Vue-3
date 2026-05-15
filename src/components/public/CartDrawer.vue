@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { useRouter } from 'vue-router';
+import { useDisplay } from 'vuetify'; // Hook para breakpoints dinâmicos
 import { useCartStore } from '@/stores/cart';
 import { useStorefrontStore } from '@/stores/storefront';
 import { useUiStore } from '@/stores/ui';
@@ -12,10 +13,18 @@ const props = defineProps<{
 }>();
 
 const router = useRouter();
+const { xs, smAndDown } = useDisplay(); // Detecta mobile e tablet
 const cartStore = useCartStore();
 const storefrontStore = useStorefrontStore();
 const uiStore = useUiStore();
 const { buildCartLink } = useWhatsApp();
+
+// --- LARGURA DINÂMICA ---
+const drawerWidth = computed(() => {
+    if (xs.value) return '100%'; // Mobile full screen
+    if (smAndDown.value) return 400; // Tablet
+    return 450; // Desktop
+});
 
 // --- LOGICA DE DADOS ---
 const visibleItems = computed(() =>
@@ -33,7 +42,6 @@ const checkoutLink = computed(() => {
         : '#';
 });
 
-// --- AÇÕES ---
 function updateQuantity(productId: string, delta: number) {
     const item = visibleItems.value.find(i => i.productId === productId);
     if (!item) return;
@@ -53,52 +61,57 @@ function goToCart() {
 </script>
 
 <template>
-    <v-navigation-drawer v-model="uiStore.cartDrawerOpen" location="right" temporary
-        :width="$vuetify.display.xs ? '100%' : 420" class="cart-drawer">
-        <div class="d-flex flex-column h-100">
-            <div class="pa-5 border-b d-flex align-center justify-space-between bg-surface">
+    <v-navigation-drawer v-model="uiStore.cartDrawerOpen" location="right" temporary capture-focus
+        disable-resize-watcher :width="drawerWidth" elevation="10" @click.stop>
+        <div class="d-flex flex-column h-100 bg-white z-100">
+            <div class="pa-4 pa-md-5 border-b d-flex align-center justify-space-between bg-surface sticky-header">
                 <div>
-                    <div class="text-h6 font-weight-black">Meu Carrinho</div>
-                    <div class="text-caption text-medium-emphasis">
-                        {{ visibleItems.length }} {{ visibleItems.length === 1 ?
-                            'item selecionado' : 'itens selecionados' }}
+                    <div class="text-h6 font-weight-black d-flex align-center">
+                        Meu Carrinho
+                        <v-chip size="x-small" color="primary" class="ml-2 font-weight-bold">
+                            {{ visibleItems.length }}
+                        </v-chip>
                     </div>
+                    <div class="text-caption text-medium-emphasis">Resumo dos seus itens</div>
                 </div>
-                <v-btn icon="mdi-close" variant="tonal" size="small" @click="uiStore.closeCartDrawer" />
+                <v-btn icon="mdi-close" variant="tonal" density="comfortable" @click="uiStore.closeCartDrawer" />
             </div>
 
-            <div class="flex-grow-1 overflow-y-auto pa-4 bg-grey-lighten-5">
+            <div class="flex-grow-1 overflow-y-auto pa-3 pa-md-4 bg-grey-lighten-5">
                 <v-fade-transition group v-if="visibleItems.length">
                     <v-card v-for="item in visibleItems" :key="`${item.storeSlug}-${item.productId}`" flat border
-                        rounded="lg" class="mb-3 pa-3 item-card">
-                        <div class="d-flex ga-3">
-                            <v-avatar size="70" rounded="lg" border>
+                        rounded="xl" class="mb-3 pa-3 item-card">
+                        <div class="d-flex ga-3 ga-md-4">
+                            <v-avatar :size="xs ? 60 : 80" rounded="lg" border class="flex-shrink-0">
                                 <v-img :src="item.imageUrl || 'https://placehold.co/300'" cover />
                             </v-avatar>
 
-                            <div class="flex-grow-1 d-flex flex-column">
-                                <div class="d-flex justify-space-between align-start">
-                                    <span class="text-body-2 font-weight-bold text-truncate" style="max-width: 180px">
+                            <div class="flex-grow-1 d-flex flex-column justify-space-between min-w-0">
+                                <div class="d-flex justify-space-between align-start ga-2">
+                                    <span class="text-body-2 font-weight-bold text-clamp-2 leading-tight">
                                         {{ item.name }}
                                     </span>
-                                    <v-btn icon="mdi-delete-outline" variant="text" color="error" size="x-small"
+                                    <v-btn icon="mdi-trash-can-outline" variant="text" color="error" size="small"
+                                        density="comfortable"
                                         @click="cartStore.removeItem(item.productId, item.storeSlug)" />
                                 </div>
 
-                                <div class="text-primary font-weight-black text-body-1 mt-1">
+                                <div class="text-primary font-weight-black text-body-2 mb-2">
                                     {{ formatCurrency(item.price) }}
                                 </div>
 
-                                <div class="d-flex align-center justify-space-between mt-auto">
+                                <div class="d-flex flex-wrap align-center justify-space-between ga-2">
                                     <div class="qty-selector d-flex align-center border rounded-pill">
                                         <v-btn icon="mdi-minus" variant="text" size="x-small"
                                             @click="updateQuantity(item.productId, -1)" />
-                                        <span class="px-3 text-caption font-weight-bold">{{ item.quantity }}</span>
+                                        <span class="px-2 text-caption font-weight-bold">{{ item.quantity }}</span>
                                         <v-btn icon="mdi-plus" variant="text" size="x-small"
                                             @click="updateQuantity(item.productId, 1)" />
                                     </div>
-                                    <div class="text-caption text-medium-emphasis font-weight-bold">
-                                        Sub: {{ formatCurrency(item.price * item.quantity) }}
+
+                                    <div class="text-caption font-weight-black text-right">
+                                        Sub: <span class="text-body-2">{{ formatCurrency(item.price * item.quantity)
+                                        }}</span>
                                     </div>
                                 </div>
                             </div>
@@ -106,32 +119,36 @@ function goToCart() {
                     </v-card>
                 </v-fade-transition>
 
-                <div v-else class="h-100 d-flex flex-column align-center justify-center text-center pa-10">
-                    <v-icon icon="mdi-cart-outline" size="64" color="grey-lighten-1" class="mb-4" />
+                <div v-else class="empty-state d-flex flex-column align-center justify-center text-center">
+                    <v-icon icon="mdi-cart-off-outline" size="80" color="grey-lighten-2" class="mb-4" />
                     <div class="text-h6 font-weight-bold text-grey-darken-1">Seu carrinho está vazio</div>
-                    <p class="text-body-2 text-medium-emphasis mb-6">Parece que você ainda não adicionou produtos à sua
-                        lista.</p>
-                    <v-btn color="primary" variant="flat" rounded="pill" block @click="uiStore.closeCartDrawer">
-                        Continuar Comprando
+                    <p class="text-body-2 text-medium-emphasis mb-6 px-10">Adicione produtos para gerar seu pedido via
+                        WhatsApp.</p>
+                    <v-btn color="primary" variant="flat" rounded="pill" class="px-8" @click="uiStore.closeCartDrawer">
+                        Ver produtos
                     </v-btn>
                 </div>
             </div>
 
-            <div v-if="visibleItems.length" class="pa-5 border-t bg-surface">
-                <div class="d-flex justify-space-between align-center mb-6">
-                    <span class="text-subtitle-1 font-weight-medium">Total do Pedido</span>
-                    <span class="text-h5 font-weight-black text-primary">{{ formatCurrency(total) }}</span>
+            <div v-if="visibleItems.length" class="pa-4 pa-md-5 border-t bg-surface footer-shadow">
+                <div class="d-flex justify-space-between align-center mb-5">
+                    <div class="d-flex flex-column">
+                        <span class="text-caption text-medium-emphasis uppercase font-weight-bold">Total do
+                            Pedido</span>
+                        <span class="text-h5 font-weight-black text-primary leading-none">{{ formatCurrency(total)
+                        }}</span>
+                    </div>
                 </div>
 
                 <div class="d-flex flex-column ga-3">
-                    <v-btn color="success" size="x-large" rounded="pill" block
+                    <v-btn color="success" height="56" rounded="pill" block
                         class="text-none font-weight-bold checkout-btn" prepend-icon="mdi-whatsapp" elevation="4"
                         :href="checkoutLink" target="_blank">
                         Finalizar pelo WhatsApp
                     </v-btn>
 
-                    <v-btn variant="text" block class="text-none text-medium-emphasis" @click="goToCart">
-                        Ver carrinho completo e detalhes
+                    <v-btn variant="text" block rounded="pill" class="text-none text-medium-emphasis" @click="goToCart">
+                        Ajustar carrinho completo
                     </v-btn>
                 </div>
             </div>
@@ -140,22 +157,32 @@ function goToCart() {
 </template>
 
 <style scoped>
-.cart-drawer {
-    z-index: 2000 !important;
+.sticky-header {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+}
+
+.footer-shadow {
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.05);
 }
 
 .item-card {
     background: white;
-    transition: transform 0.2s ease;
+    transition: all 0.2s ease;
 }
 
-.item-card:hover {
-    transform: scale(1.01);
+.text-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
 }
 
 .qty-selector {
-    height: 32px;
-    background: #f8fafc;
+    height: 36px;
+    /* Aumentado para facilitar o toque no mobile */
+    background: #f1f5f9;
 }
 
 .qty-selector :deep(.v-btn) {
@@ -163,18 +190,31 @@ function goToCart() {
     height: 32px;
 }
 
-.checkout-btn {
-    letter-spacing: 0.5px;
-    text-transform: none;
+.empty-state {
+    height: 100%;
+    min-height: 300px;
 }
 
-/* Custom scrollbar para parecer mais nativo */
+.leading-none {
+    line-height: 1 !important;
+}
+
+.leading-tight {
+    line-height: 1.25 !important;
+}
+
+.uppercase {
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* Custom scrollbar mais fina e moderna */
 .overflow-y-auto::-webkit-scrollbar {
     width: 4px;
 }
 
 .overflow-y-auto::-webkit-scrollbar-thumb {
-    background: #e2e8f0;
+    background: #cbd5e1;
     border-radius: 10px;
 }
 </style>

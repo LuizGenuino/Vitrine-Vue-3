@@ -108,12 +108,12 @@ onMounted(() => {
             <div v-for="(item, index) in localItems" :key="item.id" class="char-row d-flex align-start ga-2 mb-2">
                 <div class="flex-grow-1">
                     <v-row dense>
-                        <v-col cols="5">
+                        <v-col cols="6" sm="5">
                             <v-text-field v-model="item.key" placeholder="Característica" density="compact"
                                 variant="outlined" hide-details class="char-row-key" bg-color="surface"
                                 @update:model-value="syncToExternal" />
                         </v-col>
-                        <v-col cols="7">
+                        <v-col cols="6" sm="7">
                             <v-text-field v-model="item.value" placeholder="Valor/Descrição" density="compact"
                                 variant="outlined" hide-details bg-color="surface" @update:model-value="syncToExternal"
                                 @keyup.enter="handleEnter(index)" />

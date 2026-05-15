@@ -220,7 +220,7 @@ async function handleSave() {
                                 <v-icon icon="mdi-image-outline" size="32" color="primary" />
                                 <div class="flex-grow-1">
                                     <div class="text-subtitle-2 font-weight-bold">Banner de Fundo</div>
-                                    <div class="text-caption">Imagem panorâmica para o topo da vitrine</div>
+                                    <div class="text-caption hidden-sm-and-down">Imagem panorâmica para o topo da vitrine</div>
                                 </div>
                                 <v-btn variant="flat" color="primary" rounded="pill" size="small"
                                     @click="bannerInput?.click()">
@@ -234,7 +234,7 @@ async function handleSave() {
                 </AppSectionCard>
 
                 <div class="d-flex ga-3 mt-4">
-                    <v-btn color="primary" size="x-large" block rounded="pill" elevation="8" :loading="loading"
+                    <v-btn color="primary" size="large" block rounded="pill" elevation="8" :loading="loading"
                         @click="handleSave">
                         Salvar Todas as Alterações
                     </v-btn>

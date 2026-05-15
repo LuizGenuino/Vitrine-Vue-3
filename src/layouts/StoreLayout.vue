@@ -68,7 +68,7 @@ onMounted(async () => {
         </v-container>
     </v-app-bar>
 
-    <v-main class="bg-background pt-4">
+    <v-main class="bg-background pt-4 px-2">
         <router-view />
         <CartDrawer :store-slug="currentStoreSlug" />
     </v-main>
