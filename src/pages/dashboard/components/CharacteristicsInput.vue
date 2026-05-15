@@ -52,7 +52,6 @@ const addRow = async () => {
 };
 
 const removeRow = (index: number) => {
-    console.log("foi")
     localItems.value.splice(index, 1);
     syncToExternal();
 };
@@ -71,7 +70,6 @@ const handleEnter = (index: number) => {
 //         .map(i => `${i.key}: ${i.value}`);
 
 //     if (JSON.stringify(newVal) !== JSON.stringify(currentSerialized)) {
-//         console.log("aqui")
 //         localItems.value = parseToInternal(newVal);
 //     }
 // }, { deep: true });

@@ -21,12 +21,14 @@ const { buildCartLink } = useWhatsApp();
 
 // --- LARGURA DINÂMICA ---
 const drawerWidth = computed(() => {
-    if (xs.value) return '100%'; // Mobile full screen
+    if (xs.value) return 1000; // Mobile full screen
     if (smAndDown.value) return 400; // Tablet
     return 450; // Desktop
 });
 
 // --- LOGICA DE DADOS ---
+const modal = computed(() => uiStore.cartDrawerOpen)
+
 const visibleItems = computed(() =>
     props.storeSlug ? cartStore.itemsByStore(props.storeSlug) : cartStore.items
 );
@@ -61,12 +63,12 @@ function goToCart() {
 </script>
 
 <template>
-    <v-navigation-drawer v-model="uiStore.cartDrawerOpen" location="right" temporary capture-focus
-        disable-resize-watcher :width="drawerWidth" elevation="10" @click.stop>
-        <div class="d-flex flex-column h-100 bg-white z-100">
-            <div class="pa-4 pa-md-5 border-b d-flex align-center justify-space-between bg-surface sticky-header">
+    <v-navigation-drawer v-if="modal" v-model="modal" location="right" temporary capture-focus disable-resize-watcher
+        :width="drawerWidth" elevation="10">
+        <div class="d-flex flex-column h-100 w-100 bg-white z-100">
+            <div class="pa-4 pa-md-5 border-b d-flex align-center justify-space-between bg-surface sticky-header w-100">
                 <div>
-                    <div class="text-h6 font-weight-black d-flex align-center">
+                    <div class="text-h6 font-weight-black d-flex align-center w-100">
                         Meu Carrinho
                         <v-chip size="x-small" color="primary" class="ml-2 font-weight-bold">
                             {{ visibleItems.length }}
@@ -77,46 +79,48 @@ function goToCart() {
                 <v-btn icon="mdi-close" variant="tonal" density="comfortable" @click="uiStore.closeCartDrawer" />
             </div>
 
-            <div class="flex-grow-1 overflow-y-auto pa-3 pa-md-4 bg-grey-lighten-5">
-                <v-fade-transition group v-if="visibleItems.length">
-                    <v-card v-for="item in visibleItems" :key="`${item.storeSlug}-${item.productId}`" flat border
-                        rounded="xl" class="mb-3 pa-3 item-card">
-                        <div class="d-flex ga-3 ga-md-4">
-                            <v-avatar :size="xs ? 60 : 80" rounded="lg" border class="flex-shrink-0">
-                                <v-img :src="item.imageUrl || 'https://placehold.co/300'" cover />
-                            </v-avatar>
+            <div class="flex-grow-1 overflow-y-auto pa-3 pa-md-4 bg-grey-lighten-5 w-100">
+                <v-fade-transition group v-if="visibleItems.length" class="w-100">
+                    <div class="w-100">
+                        <v-card v-for="item in visibleItems" :key="`${item.storeSlug}-${item.productId}`" flat border
+                            rounded="xl" class="mb-3 pa-3 item-card">
+                            <div class="d-flex ga-3 ga-md-4">
+                                <v-avatar :size="xs ? 60 : 80" rounded="lg" border class="flex-shrink-0">
+                                    <v-img :src="item.imageUrl || 'https://placehold.co/300'" cover />
+                                </v-avatar>
 
-                            <div class="flex-grow-1 d-flex flex-column justify-space-between min-w-0">
-                                <div class="d-flex justify-space-between align-start ga-2">
-                                    <span class="text-body-2 font-weight-bold text-clamp-2 leading-tight">
-                                        {{ item.name }}
-                                    </span>
-                                    <v-btn icon="mdi-trash-can-outline" variant="text" color="error" size="small"
-                                        density="comfortable"
-                                        @click="cartStore.removeItem(item.productId, item.storeSlug)" />
-                                </div>
-
-                                <div class="text-primary font-weight-black text-body-2 mb-2">
-                                    {{ formatCurrency(item.price) }}
-                                </div>
-
-                                <div class="d-flex flex-wrap align-center justify-space-between ga-2">
-                                    <div class="qty-selector d-flex align-center border rounded-pill">
-                                        <v-btn icon="mdi-minus" variant="text" size="x-small"
-                                            @click="updateQuantity(item.productId, -1)" />
-                                        <span class="px-2 text-caption font-weight-bold">{{ item.quantity }}</span>
-                                        <v-btn icon="mdi-plus" variant="text" size="x-small"
-                                            @click="updateQuantity(item.productId, 1)" />
+                                <div class="flex-grow-1 d-flex flex-column justify-space-between min-w-0">
+                                    <div class="d-flex justify-space-between align-start ga-2">
+                                        <span class="text-body-2 font-weight-bold text-clamp-2 leading-tight">
+                                            {{ item.name }}
+                                        </span>
+                                        <v-btn icon="mdi-trash-can-outline" variant="text" color="error" size="small"
+                                            density="comfortable"
+                                            @click="cartStore.removeItem(item.productId, item.storeSlug)" />
                                     </div>
 
-                                    <div class="text-caption font-weight-black text-right">
-                                        Sub: <span class="text-body-2">{{ formatCurrency(item.price * item.quantity)
-                                        }}</span>
+                                    <div class="text-primary font-weight-black text-body-2 mb-2">
+                                        {{ formatCurrency(item.price) }}
+                                    </div>
+
+                                    <div class="d-flex flex-wrap align-center justify-space-between ga-2">
+                                        <div class="qty-selector d-flex align-center border rounded-pill">
+                                            <v-btn icon="mdi-minus" variant="text" size="x-small"
+                                                @click="updateQuantity(item.productId, -1)" />
+                                            <span class="px-2 text-caption font-weight-bold">{{ item.quantity }}</span>
+                                            <v-btn icon="mdi-plus" variant="text" size="x-small"
+                                                @click="updateQuantity(item.productId, 1)" />
+                                        </div>
+
+                                        <div class="text-caption font-weight-black text-right">
+                                            Sub: <span class="text-body-2">{{ formatCurrency(item.price * item.quantity)
+                                            }}</span>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                    </v-card>
+                        </v-card>
+                    </div>
                 </v-fade-transition>
 
                 <div v-else class="empty-state d-flex flex-column align-center justify-center text-center">
@@ -136,7 +140,7 @@ function goToCart() {
                         <span class="text-caption text-medium-emphasis uppercase font-weight-bold">Total do
                             Pedido</span>
                         <span class="text-h5 font-weight-black text-primary leading-none">{{ formatCurrency(total)
-                        }}</span>
+                            }}</span>
                     </div>
                 </div>
 
@@ -170,6 +174,7 @@ function goToCart() {
 .item-card {
     background: white;
     transition: all 0.2s ease;
+    width: 100%;
 }
 
 .text-clamp-2 {

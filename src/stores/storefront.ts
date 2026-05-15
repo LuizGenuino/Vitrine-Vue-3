@@ -42,16 +42,13 @@ export const useStorefrontStore = defineStore('storefront', () => {
     }
 
     async function loadDataStore(uid: string) {
-         console.log(uid, "aqui22")
         if (!uid) return;
-        console.log("aqui:", uid)
         loading.value = true;
         try {
             const [catData, prodData] = await Promise.all([
                 categoryService.listCategories(uid),
                 productService.listByOwner(uid),
             ]);
-            console.log(catData, prodData)
             categories.value = catData;
             products.value = prodData;
         } catch (e) {

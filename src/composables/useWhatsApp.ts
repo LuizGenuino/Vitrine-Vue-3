@@ -3,9 +3,14 @@ import { formatCurrency } from '@/utils/format';
 
 // Interface para os dados de checkout (Nome, Endereço, etc)
 interface CheckoutInfo {
-    name: string;
-    address: string;
-    paymentMethod: string;
+    name: string,
+    cep: string,
+    address: string,
+    number: string,
+    neighborhood: string,
+    city: string,
+    complement: string,
+    paymentMethod: string,
 }
 
 const normalizePhone = (value: string) => {
@@ -44,7 +49,7 @@ export const useWhatsApp = () => {
 
         // Formata a lista de itens com bullet points e negrito
         const itemLines = items.map(
-            (item) => `• *${item.quantity}x* ${item.name} (${formatCurrency(item.price * item.quantity)})`
+            (item) => `• *${item.quantity}x* ${item.name} de ${formatCurrency(item.price)} cada ${item.quantity > 1 ? '(' + formatCurrency(item.price * item.quantity) + ')' : ''}`
         );
 
         // Montagem da mensagem estruturada como um "Recibo"
@@ -62,9 +67,15 @@ export const useWhatsApp = () => {
             messageLines.push(
                 `*👤 DADOS DO CLIENTE*`,
                 `*Nome:* ${customer.name}`,
-                `*Entrega:* ${customer.address}`,
                 `*Pagamento:* ${customer.paymentMethod}`,
-                ''
+                '\n',
+                `*👤 DADOS DE ENTREGA*`,
+                `*Cidade:* ${customer.city || ""}`,
+                `*Bairro:* ${customer.neighborhood || ""}`,
+                `*Endereço:* ${customer.address || ""}`,
+                `*Numero:* ${customer.number || ""}`,
+                `*Complemento:* ${customer.complement || ""}`,
+                '\n',
             );
         }
 

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, reactive } from 'vue';
+import { computed, ref, reactive, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import EmptyState from '@/components/base/EmptyState.vue';
 import { useCartStore } from '@/stores/cart';
@@ -21,9 +21,17 @@ const total = computed(() => items.value.reduce((sum, item) => sum + item.price 
 // Informações Adicionais (Crucial para o Vendedor)
 const checkoutData = reactive({
     name: '',
+    cep: '',
     address: '',
+    number: '',
+    neighborhood: '',
+    city: '',
+    complement: '',
     paymentMethod: '',
 });
+
+const isCepLoading = ref(false);
+const cepError = ref('');
 
 // --- LOGICA ---
 const isFormValid = computed(() => {
@@ -31,7 +39,7 @@ const isFormValid = computed(() => {
 });
 
 const handleCheckout = () => {
-    if (!isFormValid.value) return;
+    // if (!isFormValid.value) return;
 
     // O buildCartLink agora deve receber esses dados extras para formatar a mensagem
     const link = buildCartLink(
@@ -48,6 +56,44 @@ const clearCartWithConfirm = () => {
         cartStore.clear();
     }
 };
+
+async function searchCep() {
+    const cleanCep = checkoutData.cep.replace(/\D/g, '');
+
+    if (cleanCep.length !== 8) return;
+
+    isCepLoading.value = true;
+    cepError.value = '';
+
+    try {
+        const response = await fetch(`https://viacep.com.br/ws/${cleanCep}/json/`);
+        const data = await response.json();
+
+        if (data.erro) {
+            cepError.value = 'CEP não encontrado.';
+            return;
+        }
+
+        // Preenchimento automático (Senior UX: Foco no próximo campo vazio)
+        checkoutData.address = data.logradouro;
+        checkoutData.neighborhood = data.bairro;
+        checkoutData.city = `${data.localidade} - ${data.uf}`;
+
+        // Foco automático no número após o preenchimento (Opcional via ref)
+    } catch (error) {
+        cepError.value = 'Erro ao buscar CEP. Tente preencher manualmente.';
+    } finally {
+        isCepLoading.value = false;
+    }
+}
+
+// Watcher para disparar a busca automaticamente quando o CEP estiver completo
+watch(() => checkoutData.cep, (newCep: string) => {
+    if (newCep.replace(/\D/g, '').length === 8) {
+        searchCep();
+    }
+});
+
 </script>
 
 <template>
@@ -86,7 +132,7 @@ const clearCartWithConfirm = () => {
 
                                         <div class="d-flex align-center ga-4 mt-2">
                                             <v-btn-toggle rounded="pill" color="primary" variant="outlined"
-                                                density="compact" mandatory>
+                                                density="comfortable" mandatory>
                                                 <v-btn icon="mdi-minus" size="x-small"
                                                     @click="cartStore.updateQuantity(item.productId, item.quantity - 1, item.storeSlug)" />
                                                 <v-btn disabled class="px-4 font-weight-bold">{{ item.quantity
@@ -115,18 +161,63 @@ const clearCartWithConfirm = () => {
             <v-col cols="12" lg="5">
                 <div class="sticky-top">
                     <v-card variant="flat" border rounded="xl" class="pa-6 mb-4 bg-grey-lighten-5">
-                        <h2 class="text-h6 font-weight-bold mb-4">Informações de Entrega</h2>
+                        <div class="d-flex align-center ga-2 mb-6">
+                            <v-icon icon="mdi-truck-delivery-outline" color="primary"></v-icon>
+                            <h2 class="text-h6 font-weight-bold">Informações de Entrega</h2>
+                        </div>
+
                         <v-form>
-                            <v-text-field v-model="checkoutData.name" label="Seu Nome completo" variant="outlined"
-                                bg-color="surface" class="mb-2" rounded="lg" />
-                            <v-text-field v-model="checkoutData.address" label="Endereço Completo (Rua, Nº, Bairro)"
-                                variant="outlined" bg-color="surface" class="mb-2" rounded="lg" />
-                            <v-select v-model="checkoutData.paymentMethod" label="Forma de Pagamento"
-                                :items="['Pix', 'Cartão de Crédito', 'Cartão de Débito', 'Dinheiro (na entrega)']"
-                                variant="outlined" bg-color="surface" rounded="lg" />
+                            <v-row dense>
+                                <v-col cols="12">
+                                    <v-text-field v-model="checkoutData.name" label="Seu Nome completo"
+                                        variant="outlined" bg-color="surface" rounded="lg"
+                                        placeholder="Como o entregador deve te chamar?"
+                                        prepend-inner-icon="mdi-account-outline" />
+                                </v-col>
+
+                                <v-col cols="12" md="5">
+                                    <v-text-field v-model="checkoutData.cep" label="CEP" variant="outlined"
+                                        bg-color="surface" rounded="lg" placeholder="00000-000" :loading="isCepLoading"
+                                        :error-messages="cepError" prepend-inner-icon="mdi-map-marker-outline"
+                                        v-maska="'#####-###'" />
+                                </v-col>
+
+                                <v-col cols="12" md="7">
+                                    <v-text-field v-model="checkoutData.city" label="Cidade" variant="outlined"
+                                        bg-color="grey-lighten-4" rounded="lg" readonly
+                                        hint="Preenchido automaticamente pelo CEP" />
+                                </v-col>
+
+                                <v-col cols="12" md="8">
+                                    <v-text-field v-model="checkoutData.address" label="Endereço (Rua/Avenida)"
+                                        variant="outlined" bg-color="surface" rounded="lg" />
+                                </v-col>
+
+                                <v-col cols="12" md="4">
+                                    <v-text-field v-model="checkoutData.number" label="Nº" variant="outlined"
+                                        bg-color="surface" rounded="lg" />
+                                </v-col>
+
+                                <v-col cols="12" md="6">
+                                    <v-text-field v-model="checkoutData.neighborhood" label="Bairro" variant="outlined"
+                                        bg-color="surface" rounded="lg" />
+                                </v-col>
+
+                                <v-col cols="12" md="6">
+                                    <v-text-field v-model="checkoutData.complement" label="Complemento"
+                                        variant="outlined" bg-color="surface" rounded="lg"
+                                        placeholder="Apto, Bloco, Referência..." />
+                                </v-col>
+
+                                <v-col cols="12" class="mt-2">
+                                    <v-select v-model="checkoutData.paymentMethod" label="Forma de Pagamento"
+                                        :items="['Pix', 'Cartão de Crédito', 'Cartão de Débito', 'Dinheiro (na entrega)']"
+                                        variant="outlined" bg-color="surface" rounded="lg"
+                                        prepend-inner-icon="mdi-credit-card-outline" />
+                                </v-col>
+                            </v-row>
                         </v-form>
                     </v-card>
-
                     <v-card variant="flat" border rounded="xl" class="pa-6">
                         <h2 class="text-h6 font-weight-bold mb-4">Resumo do Pedido</h2>
                         <div class="d-flex justify-space-between text-body-1 mb-2">
@@ -144,13 +235,12 @@ const clearCartWithConfirm = () => {
                         </div>
 
                         <v-btn color="primary" size="x-large" block rounded="pill" elevation="8"
-                            class="text-none font-weight-bold" prepend-icon="mdi-whatsapp" :disabled="!isFormValid"
-                            @click="handleCheckout">
+                            class="text-none font-weight-bold" prepend-icon="mdi-whatsapp" @click="handleCheckout">
                             Enviar Pedido via WhatsApp
                         </v-btn>
-                        <p v-if="!isFormValid" class="text-caption text-center mt-3 text-error">
+                        <!-- <p v-if="!isFormValid" class="text-caption text-center mt-3 text-error">
                             Preencha seus dados para habilitar o botão
-                        </p>
+                        </p> -->
                     </v-card>
                 </div>
             </v-col>

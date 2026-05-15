@@ -144,10 +144,10 @@ onMounted(loadProduct);
                             {{ categoryName }}
                         </v-chip>
 
-                        <h1 class="text-h4 font-weight-black mb-2 leading-tight">{{ product.name }}</h1>
+                        <h1 class="text-h5 font-weight-black mb-2 leading-tight">{{ product.name }}</h1>
 
                         <div class="mt-6 mb-8">
-                            <div class="text-h3 font-weight-bold text-primary">
+                            <div class="text-h4 font-weight-black text-primary">
                                 {{ formatCurrency(product.price) }}
                             </div>
                             <div class="text-caption text-success font-weight-bold mt-1">
@@ -160,10 +160,10 @@ onMounted(loadProduct);
                             <div class="text-subtitle-2 font-weight-bold mb-3">Escolha a quantidade:</div>
                             <v-btn-toggle v-model="quantity" mandatory rounded="pill" color="primary" variant="outlined"
                                 block class="qty-toggle">
-                                <v-btn :value="quantity - 1" icon="mdi-minus" size="small"
+                                <v-btn :value="quantity" icon="mdi-minus" size="small"
                                     @click="quantity > 1 ? quantity-- : null" />
                                 <p class="flex-grow-1 text-h6 font-weight-bold py-2 px-4">{{ quantity }}</p>
-                                <v-btn :value="quantity + 1" icon="mdi-plus" size="small" @click="quantity++" />
+                                <v-btn :value="quantity" icon="mdi-plus" size="small" @click="quantity++" />
                             </v-btn-toggle>
                         </div>
 

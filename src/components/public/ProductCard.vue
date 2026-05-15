@@ -38,7 +38,6 @@ function addToCart() {
         quantity: 1,
         imageUrl: props.product.imageUrls[0],
     });
-    uiStore.openCartDrawer();
 }
 
 </script>
