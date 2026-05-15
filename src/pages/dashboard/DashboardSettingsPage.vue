@@ -20,7 +20,7 @@ import OnboardingChecklist from '@/components/dashboard/OnboardingChecklist.vue'
 import type { StoreSettings, StoreSettingsForm } from '@/types';
 
 const authStore = useAuthStore();
-const storefrontStore = useStorefrontStore();
+const useStore = useStorefrontStore();
 const { loading, error, run } = useAsyncState();
 const { uploading, uploadMany } = useImageUpload();
 const success = ref('');
@@ -45,7 +45,7 @@ const form = reactive<StoreSettingsForm>({
 
 // --- LOGIC: Readiness & Plan ---
 const { steps, completion } = useStoreReadiness({
-    settings: () => form,
+    settings: () => useStore.settings,
     categoriesCount: () => categoriesCount.value,
     productsCount: () => productsCount.value,
 });
@@ -60,7 +60,7 @@ const { productLimitLabel, usagePercent } = usePlanAccess(
 function patchForm(payload: Partial<StoreSettings>) {
     Object.assign(form, payload);
     // Sync em tempo real com o Store para o Preview
-    storefrontStore.patchSettings(payload);
+    useStore.patchSettings(payload);
 }
 
 async function loadCounts(ownerId: string) {
@@ -74,16 +74,16 @@ async function loadCounts(ownerId: string) {
 
     const formdata = {
         ownerId: ownerId,
-        slug: storefrontStore.settings.slug,
-        storeName: storefrontStore.settings.storeName,
-        title: storefrontStore.settings.title,
-        subtitle: storefrontStore.settings.subtitle,
-        primaryColor: storefrontStore.settings.branding.primaryColor,
-        secondaryColor: storefrontStore.settings.branding.secondaryColor,
-        logoUrl: storefrontStore.settings.branding.logoUrl,
-        bannerUrl: storefrontStore.settings.branding.bannerUrl,
-        whatsappNumber: storefrontStore.settings.channels.whatsappNumber,
-        activePlanId: storefrontStore.settings.planSnapshot?.name,
+        slug: useStore.settings.slug,
+        storeName: useStore.settings.storeName,
+        title: useStore.settings.title,
+        subtitle: useStore.settings.subtitle,
+        primaryColor: useStore.settings.branding.primaryColor,
+        secondaryColor: useStore.settings.branding.secondaryColor,
+        logoUrl: useStore.settings.branding.logoUrl,
+        bannerUrl: useStore.settings.branding.bannerUrl,
+        whatsappNumber: useStore.settings.channels.whatsappNumber,
+        activePlanId: useStore.settings.planSnapshot?.name,
     } as StoreSettingsForm
     patchForm(formdata);
 }

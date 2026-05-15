@@ -1,10 +1,8 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue';
+import { computed, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
 import { useStorefrontStore } from '@/stores/storefront';
-import { categoryService } from '@/services/categoryService';
-import { productService } from '@/services/productService';
 import { demoSeedService } from '@/services/demoSeedService';
 import { useStoreReadiness } from '@/composables/useStoreReadiness';
 import { usePlanAccess } from '@/composables/usePlanAccess';
@@ -13,67 +11,46 @@ import { usePlanAccess } from '@/composables/usePlanAccess';
 import DashboardMetricCard from '@/components/dashboard/DashboardMetricCard.vue';
 import OnboardingChecklist from '@/components/dashboard/OnboardingChecklist.vue';
 
-import type { Category, Product } from '@/types';
 import { useFeedbackStore } from '@/stores/feedback';
 
 const feedbackStore = useFeedbackStore();
 const router = useRouter();
 const authStore = useAuthStore();
-const storefrontStore = useStorefrontStore();
+const useStore = useStorefrontStore();
 
-const categories = ref<Category[]>([]);
-const products = ref<Product[]>([]);
-const loading = ref(true);
 const seeding = ref(false);
 
 // Métricas com lógica de negócio
-const activeProducts = computed(() => products.value.filter(p => p.status === 'active').length);
-const lowStock = computed(() => products.value.filter(p => p.quantity <= 5));
+const activeProducts = computed(() => useStore.products.filter(p => p.status === 'active').length);
+const lowStock = computed(() => useStore.products.filter(p => p.quantity <= 5));
 const publicUrl = computed(() =>
-    storefrontStore.settings.slug ? `${window.location.origin}/s/${storefrontStore.settings.slug}` : ''
+    useStore.settings.slug ? `${window.location.origin}/s/${useStore.settings.slug}` : ''
 );
 
 // Composables de lógica SaaS e Readiness
 const { steps, completion, readyToLaunch } = useStoreReadiness({
-    settings: () => storefrontStore.settings,
-    categoriesCount: () => categories.value.length,
+    settings: () => useStore.settings,
+    categoriesCount: () => useStore.categories.length,
     productsCount: () => activeProducts.value,
 });
 
 const {
     currentPlan,
     usagePercent,
-    remainingProducts,
     isNearLimit,
-    isLimitReached,
 } = usePlanAccess(
-    computed(() => storefrontStore.settings.activePlanId),
-    computed(() => products.value.length)
+    computed(() => useStore.settings.activePlanId),
+    computed(() => useStore.products.length)
 );
 
-async function loadData() {
-    if (!authStore.user?.uid) return;
-    loading.value = true;
-    try {
-        const [catData, prodData] = await Promise.all([
-            categoryService.listCategories(authStore.user.uid),
-            productService.listByOwner(authStore.user.uid),
-        ]);
-        categories.value = catData;
-        products.value = prodData;
-    } catch (e) {
-        console.error("Erro ao carregar dashboard", e);
-    } finally {
-        loading.value = false;
-    }
-}
+
 
 async function populateDemo() {
     if (!authStore.user?.uid || seeding.value) return;
     seeding.value = true;
     try {
         await demoSeedService.seed(authStore.user.uid);
-        await loadData();
+        await useStore.loadDataStore(authStore.user?.uid);
     } finally {
         seeding.value = false;
     }
@@ -81,14 +58,13 @@ async function populateDemo() {
 
 async function copiarLink() {
     try {
-        await navigator.clipboard.writeText(storefrontStore.settings.slug ? `${window.location.origin}/s/${storefrontStore.settings.slug}` : '');
+        await navigator.clipboard.writeText(useStore.settings.slug ? `${window.location.origin}/s/${useStore.settings.slug}` : '');
         feedbackStore.show(`Link copiado com sucesso!`, 'success');
     } catch (err) {
         console.error('Erro ao copiar: ', err);
     }
 }
 
-onMounted(loadData);
 </script>
 
 <template>
@@ -121,12 +97,12 @@ onMounted(loadData);
                     description="Itens publicados e visíveis para clientes." color="primary" />
             </v-col>
             <v-col cols="12" sm="6" lg="3">
-                <DashboardMetricCard label="Categorias" :value="categories.length" icon="mdi-layers-outline"
+                <DashboardMetricCard label="Categorias" :value="useStore.categories.length" icon="mdi-layers-outline"
                     description="Categorias para filtros e navegação." color="secondary" />
             </v-col>
             <v-col cols="12" sm="6" lg="3">
                 <DashboardMetricCard label="Itens em Estoque" description="Soma de todos os produtos"
-                    :value="products.reduce((acc, p) => acc + (p.quantity || 0), 0)" icon="mdi-package-variant"
+                    :value="useStore.products.reduce((acc, p) => acc + (p.quantity || 0), 0)" icon="mdi-package-variant"
                     color="success" />
             </v-col>
             <v-col cols="12" sm="6" lg="3">
@@ -150,7 +126,7 @@ onMounted(loadData);
                         </v-chip>
                     </div>
 
-                    <OnboardingChecklist :steps="steps" :completion="1" />
+                    <OnboardingChecklist :steps="steps" :completion="completion" />
 
                     <v-alert v-if="!readyToLaunch" icon="mdi-rocket-launch-outline" color="primary" variant="tonal"
                         rounded="lg" class="mt-6 border-dashed">
@@ -173,7 +149,8 @@ onMounted(loadData);
 
                     <div class="d-flex justify-space-between text-caption mb-2">
                         <span class="font-weight-bold">Capacidade do Catálogo</span>
-                        <span class="text-medium-emphasis">{{ products.length }} / {{ currentPlan.productLimit }}
+                        <span class="text-medium-emphasis">{{ useStore.products.length }} / {{ currentPlan.productLimit
+                            }}
                             produtos</span>
                     </div>
                     <v-progress-linear :model-value="usagePercent" :color="isNearLimit ? 'warning' : 'primary'"

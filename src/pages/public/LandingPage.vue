@@ -123,7 +123,7 @@ const features = [
             <v-container>
                 <v-row>
                     <v-col cols="12" md="6" class="text-center text-md-left">
-                        <div class="font-weight-bold text-h6 mb-2">AlphaCode</div>
+                        <div class="font-weight-bold text-h6 mb-2">VibeStore</div>
                         <div class="text-body-2 text-medium-emphasis">Empoderando o comércio local através da tecnologia
                             simples.</div>
                     </v-col>

@@ -1,12 +1,16 @@
 import { computed, ref, shallowRef } from 'vue';
 import { defineStore } from 'pinia';
-import type { StoreSettings, StoreSettingsForm } from '@/types';
+import type { Category, Product, StoreSettings, StoreSettingsForm } from '@/types';
 import { storeService } from '@/services/storeService';
 import { createDefaultSettings } from './storefrontFactory';
+import { categoryService } from '@/services/categoryService';
+import { productService } from '@/services/productService';
 
 export const useStorefrontStore = defineStore('storefront', () => {
     // --- STATE ---
     const settings = ref<StoreSettings>(createDefaultSettings());
+    const products = ref<Product[]>([]);
+    const categories = ref<Category[]>([]);
     const loading = ref(false);
     const isInitialized = ref(false);
     const error = shallowRef<string | null>(null);
@@ -37,6 +41,26 @@ export const useStorefrontStore = defineStore('storefront', () => {
         }
     }
 
+    async function loadDataStore(uid: string) {
+         console.log(uid, "aqui22")
+        if (!uid) return;
+        console.log("aqui:", uid)
+        loading.value = true;
+        try {
+            const [catData, prodData] = await Promise.all([
+                categoryService.listCategories(uid),
+                productService.listByOwner(uid),
+            ]);
+            console.log(catData, prodData)
+            categories.value = catData;
+            products.value = prodData;
+        } catch (e) {
+            console.error("Erro ao carregar dashboard", e);
+        } finally {
+            loading.value = false;
+        }
+    }
+
     // --- BOOTSTRAP LOGIC ---
     /**
      * O Bootstrap decide a estratégia de carregamento baseada no contexto.
@@ -47,6 +71,7 @@ export const useStorefrontStore = defineStore('storefront', () => {
 
         if (context.ownerId) {
             await internalLoad(() => storeService.getByOwner(context.ownerId!));
+            await loadDataStore(context.ownerId)
         } else if (context.slug) {
             await internalLoad(() => storeService.getBySlug(context.slug!));
         }
@@ -73,10 +98,16 @@ export const useStorefrontStore = defineStore('storefront', () => {
         isInitialized,
         error,
         themeStyles,
-
+        products,
+        categories,
+        store: {
+            products: products.value,
+            categories: categories.value,
+        },
         // Logic
         bootstrap,
         patchSettings,
+        loadDataStore,
         reset
     };
 });

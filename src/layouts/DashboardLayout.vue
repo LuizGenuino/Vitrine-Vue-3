@@ -33,12 +33,16 @@ const publicUrl = computed(() =>
 
 const activePlan = computed(() => planService.getById(useStore.settings.activePlanId));
 
-// Simulação de uso para a barra de progresso (UX de SaaS Real)
+
+const productsCount = computed(() => {
+    return useStore.products.length;
+})
+
 const productUsagePercent = computed(() => {
     const limit = activePlan.value.productLimit || 1;
-    const current = 12; // Supondo que você tenha esse contador no store
-    return (current / limit) * 100;
+    return (productsCount.value / limit) * 100;
 });
+
 
 onMounted(async () => {
     if (!authStore.user?.uid) return;
@@ -52,7 +56,8 @@ async function handleLogout() {
 </script>
 
 <template>
-    <v-layout class="bg-background">
+    <v-layout class="bg-background dashboard-container">
+
         <v-app-bar flat border class="px-md-4">
             <v-app-bar-nav-icon @click="drawer = !drawer" class="hidden-lg-and-up"></v-app-bar-nav-icon>
 
@@ -80,8 +85,7 @@ async function handleLogout() {
                         </v-avatar>
                     </template>
                     <v-list width="200" rounded="lg" class="mt-2">
-                        <v-list-item :title="authStore.user?.email || ''" subtitle="Administrador">
-                        </v-list-item>
+                        <v-list-item :title="authStore.user?.email || ''" subtitle="Administrador"></v-list-item>
                         <v-divider class="my-2"></v-divider>
                         <v-list-item prepend-icon="mdi-logout" title="Sair" color="error"
                             @click="handleLogout"></v-list-item>
@@ -98,22 +102,22 @@ async function handleLogout() {
                     </v-avatar>
                     <div>
                         <div class="text-subtitle-2 font-weight-black leading-tight">
-                            {{ useStore.settings.storeName || 'Minha Loja' }}</div>
+                            {{ useStore.settings.storeName || 'Minha Loja' }}
+                        </div>
                         <div class="text-caption text-medium-emphasis">Painel de Controle</div>
                     </div>
                 </div>
 
                 <v-card variant="tonal" color="primary" rounded="xl" class="pa-4 border-0">
                     <div class="d-flex justify-space-between align-center mb-2">
-                        <span class="text-caption font-weight-bold">PLANO {{ activePlan.name.toUpperCase() }}</span>
+                        <span class="text-caption font-weight-bold uppercase">PLANO {{ activePlan.name.toUpperCase()
+                            }}</span>
                         <v-icon icon="mdi-shield-check" size="16"></v-icon>
                     </div>
-
                     <v-progress-linear :model-value="productUsagePercent" height="6" rounded
                         class="mb-2"></v-progress-linear>
-
                     <div class="text-caption d-flex justify-space-between opacity-80">
-                        <span>{{ planService.getLimitLabel(activePlan.productLimit) }} produtos</span>
+                        <span>{{ productsCount }} de {{ planService.getLimitLabel(activePlan.productLimit) }}</span>
                         <span>{{ Math.round(productUsagePercent) }}%</span>
                     </div>
                 </v-card>
@@ -124,7 +128,6 @@ async function handleLogout() {
                     <div v-if="item.section" class="text-overline text-medium-emphasis mt-4 mb-2 ml-4">
                         {{ item.section }}
                     </div>
-
                     <v-list-item v-else :to="item.to" :prepend-icon="item.icon" :title="item.title" rounded="xl"
                         color="primary" class="mb-1"></v-list-item>
                 </template>
@@ -133,7 +136,7 @@ async function handleLogout() {
             <template #append>
                 <div class="pa-4">
                     <v-card variant="outlined" rounded="xl" class="pa-4 border-dashed">
-                        <div class="text-caption font-weight-bold mb-1">Precisa de ajuda?</div>
+                        <div class="text-caption font-weight-bold mb-1">Ajuda & Suporte</div>
                         <v-btn block size="small" variant="text" prepend-icon="mdi-whatsapp"
                             class="text-none justify-start">
                             Falar com suporte
@@ -143,33 +146,66 @@ async function handleLogout() {
             </template>
         </v-navigation-drawer>
 
-        <v-main class="bg-grey-lighten-4">
-            <div class="pa-4 pa-md-8">
-                <v-fade-transition mode="out-in">
-                    <router-view />
-                </v-fade-transition>
+        <v-main class="bg-grey-lighten-4 main-content">
+            <div class="scrollable-area">
+                <div class="pa-4 pa-md-8 max-width-container">
+                    <v-fade-transition mode="out-in">
+                        <router-view />
+                    </v-fade-transition>
+                </div>
             </div>
         </v-main>
     </v-layout>
 </template>
 
 <style scoped>
+/* 1. Trava o layout na altura da tela */
+.dashboard-container {
+    height: 100dvh !important;
+    overflow: hidden;
+    /* Impede que o layout inteiro role */
+}
+
+/* 2. Faz o v-main preencher a altura e gerenciar o scroll */
+.main-content {
+    height: 100%;
+}
+
+.scrollable-area {
+    height: 100%;
+    overflow-y: auto;
+    /* Apenas o conteúdo rola */
+    scroll-behavior: smooth;
+}
+
+/* 3. Estética Senior: Container de largura máxima para telas grandes */
+.max-width-container {
+    max-width: 1600px;
+    margin: 0 auto;
+}
+
 .leading-tight {
     line-height: 1.2 !important;
 }
 
-/* Estilo para deixar a scrollbar fina e elegante */
-:deep(.v-navigation-drawer__content)::-webkit-scrollbar {
-    width: 5px;
+/* Scrollbar refinada para o conteúdo principal */
+.scrollable-area::-webkit-scrollbar {
+    width: 6px;
 }
 
-:deep(.v-navigation-drawer__content)::-webkit-scrollbar-thumb {
+.scrollable-area::-webkit-scrollbar-thumb {
     background: rgba(var(--v-theme-primary), 0.1);
     border-radius: 10px;
 }
 
-/* Background suave para o conteúdo para destacar os cards brancos */
-.v-main {
-    min-height: 100vh;
+.scrollable-area::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+/* Border dashed personalizada */
+.border-dashed {
+    border-style: dashed !important;
+    border-width: 1px !important;
+    border-color: rgba(var(--v-border-color), 0.3) !important;
 }
 </style>

@@ -12,7 +12,7 @@ import type { Category, Product } from '@/types';
 
 const route = useRoute();
 const router = useRouter();
-const storefrontStore = useStorefrontStore();
+const useStore = useStorefrontStore();
 const cartStore = useCartStore();
 const uiStore = useUiStore();
 const { buildProductLink } = useWhatsApp();
@@ -50,8 +50,8 @@ async function loadProduct() {
         if (product.value) {
             activeImage.value = product.value.imageUrls[0] || '';
         }
-        if (storefrontStore.settings.ownerId) {
-            categories.value = await categoryService.listCategories(storefrontStore.settings.ownerId);
+        if (useStore.settings.ownerId) {
+            categories.value = await categoryService.listCategories(useStore.settings.ownerId);
         }
     } finally {
         loading.value = false;
@@ -73,7 +73,7 @@ function addToCart() {
 
 function buyNow() {
     if (!product.value) return;
-    window.open(buildProductLink(storefrontStore.settings.channels.whatsappNumber, product.value, quantity.value), '_blank');
+    window.open(buildProductLink(useStore.settings.channels.whatsappNumber, product.value, quantity.value), '_blank');
 }
 
 onMounted(loadProduct);
