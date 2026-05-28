@@ -31,5 +31,9 @@ export const useAuthStore = defineStore('auth', () => {
     return authService.logout();
   }
 
-  return { user, loading, isAuthenticated, init, login, register, logout };
+  async function sendPasswordResetEmail(email: string) {
+    return authService.sendPasswordResetEmail(email);
+  }
+
+  return { user, loading, isAuthenticated, init, login, register, logout, sendPasswordResetEmail };
 });

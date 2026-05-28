@@ -12,44 +12,61 @@ const { loading, error, run } = useAsyncState();
 const success = ref('');
 
 const form = reactive({
-  email: '',
-  password: '',
+    email: '',
+    password: '',
 });
 
 async function handleSubmit() {
-  success.value = '';
-  await run(async () => {
-    await authStore.login(form.email, form.password);
-    success.value = 'Login realizado com sucesso.';
-    router.push({ name: 'dashboard-overview' });
-  });
+    success.value = '';
+    await run(async () => {
+        await authStore.login(form.email, form.password);
+        success.value = 'Login realizado com sucesso.';
+        router.push({ name: 'dashboard-overview' });
+    });
+}
+async function handlepasswordReset() {
+    if (!form.email) {
+        error.value = 'Por favor, insira seu e-mail para recuperação.';
+        return;
+    }
+    success.value = '';
+    await run(async () => {
+        await authStore.sendPasswordResetEmail(form.email);
+        success.value = 'E-mail de recuperação enviado.';
+    });
 }
 </script>
 
+
 <template>
-  <v-card class="glass-panel pa-6 pa-md-8">
-    <div class="text-overline text-medium-emphasis mb-3">Acesso</div>
-    <div class="text-h4 font-weight-bold mb-2">Entre na sua conta</div>
-    <div class="text-body-1 text-medium-emphasis mb-6">Gerencie sua vitrine, produtos e identidade visual.</div>
+    <v-card class="glass-panel pa-6 pa-md-8">
+        <div class="text-overline text-medium-emphasis mb-3">Acesso</div>
+        <div class="text-h4 font-weight-bold mb-2">Entre na sua conta</div>
+        <div class="text-body-1 text-medium-emphasis mb-6">Gerencie sua vitrine, produtos e identidade visual.</div>
 
-    <v-alert v-if="!isFirebaseConfigured" type="warning" variant="tonal" class="mb-4">
-      Configure as variáveis do Firebase antes de autenticar.
-    </v-alert>
+        <v-alert v-if="!isFirebaseConfigured" type="warning" variant="tonal" class="mb-4">
+            Configure as variáveis do Firebase antes de autenticar.
+        </v-alert>
 
-    <v-alert v-if="error" type="error" variant="tonal" class="mb-4">{{ error }}</v-alert>
-    <v-alert v-if="success" type="success" variant="tonal" class="mb-4">{{ success }}</v-alert>
+        <v-alert v-if="error" type="error" variant="tonal" class="mb-4">{{ error }}</v-alert>
+        <v-alert v-if="success" type="success" variant="tonal" class="mb-4">{{ success }}</v-alert>
 
-    <v-form @submit.prevent="handleSubmit">
-      <div class="d-flex flex-column ga-4">
-        <AppTextField v-model="form.email" label="E-mail" type="email" hint="Use o e-mail cadastrado no Firebase Auth" />
-        <AppTextField v-model="form.password" label="Senha" type="password" />
-        <v-btn :loading="loading" color="primary" size="large" type="submit" block>Entrar</v-btn>
-      </div>
-    </v-form>
+        <v-form @submit.prevent="handleSubmit">
+            <div class="d-flex flex-column ga-4">
+                <AppTextField v-model="form.email" label="E-mail" type="email"
+                    hint="Use o e-mail cadastrado no Firebase Auth" />
+                <AppTextField v-model="form.password" label="Senha" type="password" />
+                <div>
+                    <v-btn variant="text" color="primary" @click="handlepasswordReset()">Esqueci
+                        minha senha</v-btn>
+                </div>
+                <v-btn :loading="loading" color="primary" size="large" type="submit" block>Entrar</v-btn>
+            </div>
+        </v-form>
 
-    <div class="text-body-2 text-medium-emphasis mt-6">
-      Ainda não tem conta?
-      <router-link class="font-weight-bold" :to="{ name: 'register' }">Criar cadastro</router-link>
-    </div>
-  </v-card>
+        <div class="text-body-2 text-medium-emphasis mt-6">
+            Ainda não tem conta?
+            <router-link class="font-weight-bold" :to="{ name: 'register' }">Criar cadastro</router-link>
+        </div>
+    </v-card>
 </template>
