@@ -36,6 +36,11 @@ export interface StoreSettings {
     customDomain?: string;
     createdAt?: string;
     updatedAt?: string;
+    whatsappNumber?: string;
+    logoUrl?: string;
+    primaryColor?: string;
+    secondaryColor?: string;
+    bannerUrl?: string;
 }
 
 export interface StoreSettingsBranding {
