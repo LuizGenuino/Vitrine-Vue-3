@@ -21,6 +21,10 @@ const categories = ref<Category[]>([]);
 const subcategories = ref<Subcategory[]>([]);
 const loading = ref(true);
 
+const snackbar = ref(false)
+const text = ref<string[]>(['', ''])
+const timeout = ref(5000)
+
 const storeSlug = computed(() => {
     const slug = route.params.storeSlug;
     return typeof slug === 'string' ? slug : '';
@@ -206,7 +210,7 @@ watch(() => storefront.settings.ownerId, (newId) => {
                 </v-col>
             </v-row>
 
-            <v-row v-else-if="filteredProducts.length">
+            <v-row v-else-if="filteredProducts.length" class="flex justify-center">
                 <v-col v-for="product in filteredProducts" :key="product.id" cols="6" sm="4" lg="3" xl="2"
                     class="px-1 py-2 ma-0">
                     <ProductCard :product="product" :store-slug="storeSlug" />
@@ -221,6 +225,15 @@ watch(() => storefront.settings.ownerId, (newId) => {
                 </div>
             </v-fade-transition>
         </v-container>
+            <v-snackbar location="top end" :color="text[1]" v-model="snackbar" :timeout="timeout">
+        {{ text[0] }}
+
+        <template v-slot:actions>
+            <v-btn color="" variant="text" @click="snackbar = false">
+                x
+            </v-btn>
+        </template>
+    </v-snackbar>
     </div>
 </template>
 

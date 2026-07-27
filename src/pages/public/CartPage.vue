@@ -33,6 +33,10 @@ const checkoutData = reactive({
 const isCepLoading = ref(false);
 const cepError = ref('');
 
+const snackbar = ref(false)
+const text = ref<string[]>(['', ''])
+const timeout = ref(5000)
+
 // --- LOGICA ---
 const isFormValid = computed(() => {
     return checkoutData.name.length > 2 && checkoutData.address.length > 5 && checkoutData.paymentMethod;
@@ -54,6 +58,9 @@ const handleCheckout = () => {
 const clearCartWithConfirm = () => {
     if (confirm('Deseja realmente esvaziar seu carrinho?')) {
         cartStore.clear();
+
+        snackbar.value = true
+        text.value = ['Seu carrinho foi Limpo!', 'info']
     }
 };
 
@@ -136,7 +143,7 @@ watch(() => checkoutData.cep, (newCep: string) => {
                                                 <v-btn icon="mdi-minus" size="x-small"
                                                     @click="cartStore.updateQuantity(item.productId, item.quantity - 1, item.storeSlug)" />
                                                 <v-btn disabled class="px-4 font-weight-bold">{{ item.quantity
-                                                }}</v-btn>
+                                                    }}</v-btn>
                                                 <v-btn icon="mdi-plus" size="x-small"
                                                     @click="cartStore.updateQuantity(item.productId, item.quantity + 1, item.storeSlug)" />
                                             </v-btn-toggle>
@@ -235,7 +242,8 @@ watch(() => checkoutData.cep, (newCep: string) => {
                         </div>
 
                         <v-btn color="primary" size="large" block rounded="pill" elevation="8"
-                            class="text-none font-weight-bold text-title-medium!" prepend-icon="mdi-whatsapp" @click="handleCheckout">
+                            class="text-none font-weight-bold text-title-medium!" prepend-icon="mdi-whatsapp"
+                            @click="handleCheckout">
                             Enviar Pedido via WhatsApp
                         </v-btn>
                         <!-- <p v-if="!isFormValid" class="text-caption text-center mt-3 text-error">
@@ -253,6 +261,15 @@ watch(() => checkoutData.cep, (newCep: string) => {
             </v-btn>
         </EmptyState>
     </v-container>
+    <v-snackbar location="top end" :color="text[1]" v-model="snackbar" :timeout="timeout">
+        {{ text[0] }}
+
+        <template v-slot:actions>
+            <v-btn color="" variant="text" @click="snackbar = false">
+                x
+            </v-btn>
+        </template>
+    </v-snackbar>
 </template>
 
 <style scoped>

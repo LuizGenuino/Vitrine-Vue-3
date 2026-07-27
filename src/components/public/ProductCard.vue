@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import type { Product } from '@/types';
 import { formatCurrency } from '@/utils/format';
@@ -15,6 +15,10 @@ const props = defineProps<Props>();
 const router = useRouter();
 const cartStore = useCartStore();
 const uiStore = useUiStore();
+
+const snackbar = ref(false)
+const text = ref<string[]>(['', ''])
+const timeout = ref(5000)
 
 // Lógica de Negócio: Estados do Produto
 const isLowStock = computed(() => props.product.quantity > 0 && props.product.quantity <= 5);
@@ -38,6 +42,8 @@ function addToCart() {
         quantity: 1,
         imageUrl: props.product.imageUrls[0],
     });
+    snackbar.value = true
+    text.value = ['Produto Adicionado ao Carrinho!', 'success']
 }
 
 </script>
@@ -98,6 +104,15 @@ function addToCart() {
             </v-card-text>
         </v-card>
     </v-hover>
+    <v-snackbar location="top end" :color="text[1]" v-model="snackbar" :timeout="timeout">
+        {{ text[0] }}
+
+        <template v-slot:actions>
+            <v-btn color="" variant="text" @click="snackbar = false">
+                x
+            </v-btn>
+        </template>
+    </v-snackbar>
 </template>
 
 <style scoped>
