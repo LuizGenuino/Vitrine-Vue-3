@@ -43,12 +43,72 @@ const {
     computed(() => products.value.length)
 );
 
-const stats = computed(() => ({
-    active: products.value.filter(p => p.status === 'active').length,
-    lowStock: products.value.filter(p => p.quantity <= 5).length,
-    outOfStock: products.value.filter(p => p.quantity === 0).length,
-    totalValue: formatCurrency(products.value.reduce((acc, p) => acc + (p.price * p.quantity), 0))
-}));
+const stats = computed(() =>
+    products.value.reduce(
+        (acc, product) => {
+            if (product.status === 'active') acc.active++;
+
+            if (product.quantity === 0) acc.outOfStock++;
+            else if (product.quantity <= 5) acc.lowStock++;
+
+            acc.totalCost += product.production_cost * product.quantity;
+            acc.totalValue += product.price * product.quantity;
+
+            return acc;
+        },
+        {
+            active: 0,
+            lowStock: 0,
+            outOfStock: 0,
+            totalCost: 0,
+            totalValue: 0,
+        }
+    )
+);
+
+const totalProfit = computed(() =>
+    stats.value.totalValue - stats.value.totalCost
+);
+
+
+const metricCards = computed(() => [
+    {
+        label: 'Ativos',
+        value: stats.value.active,
+        color: 'success',
+        icon: 'mdi-store-check',
+    },
+    {
+        label: 'Estoque Baixo',
+        value: stats.value.lowStock,
+        color: 'warning',
+        icon: 'mdi-package-variant',
+    },
+    {
+        label: 'Esgotados',
+        value: stats.value.outOfStock,
+        color: 'error',
+        icon: 'mdi-package-variant',
+    },
+    {
+        label: 'Custo Total dos Produtos',
+        value: formatCurrency(stats.value.totalCost),
+        color: 'primary',
+        icon: 'mdi-cash-minus',
+    },
+    {
+        label: 'Valor Total em vendas',
+        value: formatCurrency(stats.value.totalValue),
+        color: 'primary',
+        icon: 'mdi-cash',
+    },
+    {
+        label: 'Lucro Total possivel',
+        value: formatCurrency(totalProfit.value),
+        color: totalProfit.value >= 0 ? 'success' : 'error',
+        icon: 'mdi-trending-up',
+    },
+]);
 
 // --- MÉTODOS ---
 async function loadData() {
@@ -77,6 +137,7 @@ function handleCreate() {
     selectedProduct.value = {
         name: '',
         price: 0,
+        production_cost: 0,
         quantity: 0,
         description: '',
         categoryId: '',
@@ -138,12 +199,8 @@ onMounted(loadData);
     <div class="d-flex flex-column ga-6 pb-10">
 
         <v-row dense>
-            <v-col v-for="(val, label) in stats" :key="label" cols="12" sm="6" lg="3">
-                <DashboardMetricCard
-                    :label="label === 'active' ? 'Ativos' : label === 'lowStock' ? 'Estoque Baixo' : label === 'outOfStock' ? 'Esgotados' : 'Valor Total'"
-                    :value="val"
-                    :color="label === 'active' ? 'success' : label === 'outOfStock' ? 'error' : label === 'lowStock' ? 'warning' : 'primary'"
-                    :icon="label === 'active' ? 'mdi-store-check' : 'mdi-package-variant'" />
+            <v-col v-for="card in metricCards" :key="card.label" cols="12" sm="6" lg="4">
+                <DashboardMetricCard :label="card.label" :value="card.value" :color="card.color" :icon="card.icon" />
             </v-col>
         </v-row>
 

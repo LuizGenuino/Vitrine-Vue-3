@@ -19,9 +19,13 @@ const form = reactive({
 async function handleSubmit() {
     success.value = '';
     await run(async () => {
-        await authStore.login(form.email, form.password);
-        success.value = 'Login realizado com sucesso.';
-        router.push({ name: 'dashboard-overview' });
+        try {
+            await authStore.login(form.email, form.password);
+            success.value = 'Login realizado com sucesso.';
+            router.push({ name: 'dashboard-overview' });
+        } catch (err) {
+            error.value = 'Erro de autenticação. Verifique suas credenciais.';
+        }
     });
 }
 async function handlepasswordReset() {

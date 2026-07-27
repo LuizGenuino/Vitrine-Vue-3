@@ -86,6 +86,7 @@ export interface Product {
     slug: string;
     name: string;
     price: number;
+    production_cost: number;
     compareAtPrice?: number | null;
     quantity: number;
     description: string;

@@ -234,8 +234,8 @@ watch(() => checkoutData.cep, (newCep: string) => {
                             <span class="text-primary">{{ formatCurrency(total) }}</span>
                         </div>
 
-                        <v-btn color="primary" size="x-large" block rounded="pill" elevation="8"
-                            class="text-none font-weight-bold" prepend-icon="mdi-whatsapp" @click="handleCheckout">
+                        <v-btn color="primary" size="large" block rounded="pill" elevation="8"
+                            class="text-none font-weight-bold text-title-medium!" prepend-icon="mdi-whatsapp" @click="handleCheckout">
                             Enviar Pedido via WhatsApp
                         </v-btn>
                         <!-- <p v-if="!isFormValid" class="text-caption text-center mt-3 text-error">

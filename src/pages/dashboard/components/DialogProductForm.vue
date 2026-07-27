@@ -86,7 +86,7 @@ async function submit() {
                 <v-toolbar-title class="font-weight-black">
                     {{ product.id ? 'Editar Produto' : 'Cadastrar Novo Produto' }}
                 </v-toolbar-title>
-                <v-spacer class="hidden-sm-and-down" ></v-spacer>
+                <v-spacer class="hidden-sm-and-down"></v-spacer>
                 <v-chip v-if="product.id" label size="small" class="mr-4">
                     ID: {{ product.code }}
                 </v-chip>
@@ -110,6 +110,10 @@ async function submit() {
                                         variant="outlined" />
                                 </v-col>
                                 <v-col cols="12" md="6">
+                                    <v-text-field v-model="product.production_cost" label="Custo do Produto*" prefix="R$"
+                                        type="number" :rules="[rules.required, rules.minPrice]" variant="outlined" />
+                                </v-col>
+                                <v-col cols="12" md="6">
                                     <v-text-field v-model="product.price" label="Preço de venda*" prefix="R$"
                                         type="number" :rules="[rules.required, rules.minPrice]" variant="outlined" />
                                 </v-col>
@@ -119,8 +123,7 @@ async function submit() {
                                 </v-col>
                                 <v-col cols="12" md="6">
                                     <v-select v-model="product.categoryId" :items="categories" item-title="name"
-                                        item-value="id" label="Categoria Pai" variant="outlined" clearable
-                                         />
+                                        item-value="id" label="Categoria Pai" variant="outlined" clearable />
                                 </v-col>
                                 <v-col cols="12" md="6">
                                     <v-select v-model="product.subcategoryId" :items="filteredSubcategories"

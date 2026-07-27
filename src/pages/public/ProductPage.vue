@@ -168,12 +168,12 @@ onMounted(loadProduct);
                         </div>
 
                         <div class="d-flex flex-column ga-3">
-                            <v-btn block size="x-large" color="primary" rounded="pill" elevation="4"
+                            <v-btn block size="large" color="primary" rounded="pill" elevation="4"
                                 class="text-none font-weight-bold py-7" prepend-icon="mdi-whatsapp" @click="buyNow">
                                 Pedir via WhatsApp
                             </v-btn>
 
-                            <v-btn block size="x-large" variant="tonal" color="primary" rounded="pill"
+                            <v-btn block size="large" variant="tonal" color="primary" rounded="pill"
                                 class="text-none font-weight-bold" prepend-icon="mdi-cart-plus" @click="addToCart">
                                 Adicionar ao Carrinho
                             </v-btn>

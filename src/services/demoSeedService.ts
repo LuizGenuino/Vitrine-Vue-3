@@ -20,6 +20,7 @@ const demoCatalog = {
             name: 'Camiseta Essential',
             price: 89.9,
             quantity: 18,
+            production_cost: 40,
             description: 'Modelagem minimalista com toque premium para uso diário.',
             characteristics: ['Algodão penteado', 'Caimento reto', 'Unissex'],
             details: 'A Camiseta Essential é a peça-chave para quem busca conforto e estilo em um só item. Confeccionada com algodão penteado de alta qualidade, oferece um toque suave e durabilidade excepcional. Seu caimento reto proporciona um visual moderno e versátil, perfeito para compor looks casuais ou mais elaborados. Com design unissex, é a escolha ideal para quem valoriza praticidade sem abrir mão do estilo.',
@@ -31,6 +32,7 @@ const demoCatalog = {
         {
             name: 'Moletom Studio',
             price: 219.9,
+            production_cost: 120,
             quantity: 7,
             description: 'Peça com acabamento encorpado para coleções autorais e lifestyle.',
             characteristics: ['Interior felpado', 'Punho reforçado', 'Modelagem premium'],
@@ -43,6 +45,7 @@ const demoCatalog = {
         {
             name: 'Boné Signature',
             price: 69.9,
+            production_cost: 30,
             quantity: 22,
             description: 'Acessório de entrada perfeito para ampliar ticket médio da loja.',
             characteristics: ['Aba curva', 'Regulagem traseira', 'Bordado frontal'],
@@ -90,6 +93,7 @@ export const demoSeedService = {
                 slug: slugify(item.name),
                 name: item.name,
                 price: item.price,
+                production_cost: item.production_cost,
                 quantity: item.quantity,
                 description: item.description,
                 characteristics: item.characteristics,

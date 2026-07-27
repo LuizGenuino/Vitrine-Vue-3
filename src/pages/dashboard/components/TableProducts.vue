@@ -150,6 +150,7 @@ function onStockInputBlur(product: Product, event: any) {
                 <thead>
                     <tr class="bg-grey-lighten-5">
                         <th class="text-overline font-weight-bold">Produto</th>
+                        <th class="text-overline font-weight-bold">Custo</th>
                         <th class="text-overline font-weight-bold">Preço</th>
                         <th class="text-overline font-weight-bold" style="width: 160px">Estoque</th>
                         <th class="text-overline font-weight-bold text-center">Exibir</th>
@@ -172,6 +173,7 @@ function onStockInputBlur(product: Product, event: any) {
                                 </div>
                             </div>
                         </td>
+                        <td class="font-weight-black">{{ formatCurrency(product.production_cost) }}</td>
                         <td class="font-weight-black">{{ formatCurrency(product.price) }}</td>
 
                         <td>
