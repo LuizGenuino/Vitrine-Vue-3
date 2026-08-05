@@ -9,6 +9,7 @@ import { useUiStore } from '@/stores/ui';
 import { useWhatsApp } from '@/composables/useWhatsApp';
 import { formatCurrency } from '@/utils/format';
 import type { Category, Product } from '@/types';
+import { toast } from '@/utils/swal/toast';
 
 const route = useRoute();
 const router = useRouter();
@@ -53,6 +54,9 @@ async function loadProduct() {
         if (useStore.settings.ownerId) {
             categories.value = await categoryService.listCategories(useStore.settings.ownerId);
         }
+    } catch (error) {
+        console.error('Erro ao carregar o produto:', error);
+        toast('Erro ao carregar o produto.', 'error');
     } finally {
         loading.value = false;
     }
@@ -69,6 +73,7 @@ function addToCart() {
         imageUrl: product.value.imageUrls[0],
     });
     uiStore.openCartDrawer();
+    toast('Produto adicionado ao carrinho!', 'success');
 }
 
 function buyNow() {

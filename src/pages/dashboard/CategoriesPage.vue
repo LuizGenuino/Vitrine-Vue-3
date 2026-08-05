@@ -6,6 +6,7 @@ import { slugify } from '@/utils/format';
 import AppSectionCard from '@/components/base/AppSectionCard.vue';
 import EmptyState from '@/components/base/EmptyState.vue';
 import type { Category, Subcategory } from '@/types';
+import { toast } from '@/utils/swal/toast';
 
 const authStore = useAuthStore();
 const loading = ref(false);
@@ -33,6 +34,9 @@ async function loadData() {
         ]);
         categories.value = cats;
         subcategories.value = subs;
+    } catch (error) {
+        console.error('Erro ao carregar dados:', error);
+        toast('Erro ao carregar categorias e subcategorias.', 'error');
     } finally {
         loading.value = false;
     }
@@ -40,8 +44,14 @@ async function loadData() {
 
 async function handleAction(id: string, action: () => Promise<void>) {
     btnLoading.value = id;
-    try { await action(); await loadData(); }
-    finally { btnLoading.value = null; }
+    try {
+        await action();
+        await loadData();
+    }
+    catch (error) {
+        console.error('Erro ao executar ação:', error);
+        throw error; // Re-throw para que o chamador possa lidar com o erro
+    } finally { btnLoading.value = null; }
 }
 
 async function createCategory() {
@@ -54,6 +64,9 @@ async function createCategory() {
             order: categories.value.length + 1,
         });
         categoryForm.name = '';
+        toast('Categoria criada com sucesso.', 'success');
+    }).catch((err) => {
+        toast('Erro ao criar categoria.', 'error');
     });
 }
 
@@ -70,17 +83,30 @@ async function quickCreateSub(categoryId: string) {
             order: 99,
         });
         subcategoryForms[categoryId] = '';
+        toast('Subcategoria criada com sucesso.', 'success');
+    }).catch((err) => {
+        toast('Erro ao criar subcategoria.', 'error');
     });
 }
 
 async function removeCategory(id?: string) {
     if (!id || !confirm('Excluir esta categoria removerá o vínculo com os produtos. Confirmar?')) return;
-    await handleAction(`del-${id}`, () => categoryService.removeCategory(id));
+    await handleAction(`del-${id}`, async () => {
+        await categoryService.removeCategory(id);
+        toast('Categoria removida com sucesso.', 'info');
+    }).catch((err) => {
+        toast('Erro ao remover categoria.', 'error');
+    });
 }
 
 async function removeSub(id?: string) {
     if (!id) return;
-    await handleAction(`del-sub-${id}`, () => categoryService.removeSubcategory(id));
+    await handleAction(`del-sub-${id}`, async () => {
+        await categoryService.removeSubcategory(id);
+        toast('Subcategoria removida com sucesso.', 'info');
+    }).catch((err) => {
+        toast('Erro ao remover subcategoria.', 'error');
+    });
 }
 
 onMounted(loadData);

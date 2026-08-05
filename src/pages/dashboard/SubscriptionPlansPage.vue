@@ -8,6 +8,7 @@ import { planService } from '@/services/planService';
 import { usePlanAccess } from '@/composables/usePlanAccess';
 import PlanCard from '@/components/dashboard/PlanCard.vue';
 import type { StoreSettings } from '@/types';
+import { toast } from '@/utils/swal/toast';
 
 const authStore = useAuthStore();
 const useStore = useStorefrontStore();
@@ -42,6 +43,10 @@ async function activatePlan(planId: string) {
         await storeService.save(payload);
         useStore.patchSettings({ ...payload });
         feedbackStore.show(`Plano ${selectedPlan.name} ativado com sucesso.`, 'success');
+        toast(`Plano ${selectedPlan.name} ativado com sucesso.`, 'success');
+    } catch (error) {
+        feedbackStore.show('Erro ao ativar plano.', 'error');
+        toast('Erro ao ativar plano.', 'error');
     } finally {
         loading.value = false;
     }

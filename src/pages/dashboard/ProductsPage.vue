@@ -14,6 +14,7 @@ import { gerarCodigo } from '@/utils/generate';
 import DashboardMetricCard from '@/components/dashboard/DashboardMetricCard.vue';
 import DialogProductForm from './components/DialogProductForm.vue';
 import TableProducts from './components/TableProducts.vue';
+import { toast } from '@/utils/swal/toast.ts';
 
 const authStore = useAuthStore();
 const useStore = useStorefrontStore();
@@ -124,6 +125,11 @@ async function loadData() {
         products.value = p;
         categories.value = c;
         subcategories.value = s;
+    } catch (error) {
+        feedbackStore.show('Erro ao carregar produtos.', 'error');
+        toast('Erro ao carregar produtos.', 'error');
+
+
     } finally {
         loading.value = false;
     }
@@ -131,6 +137,7 @@ async function loadData() {
 
 function handleCreate() {
     if (!canCreateProduct.value) {
+        toast('Limite do plano atingido.', 'warning');
         return feedbackStore.show('Limite do plano atingido.', 'warning');
     }
     // Inicializa um objeto limpo para o Dialog
@@ -180,12 +187,13 @@ async function saveProduct() {
             quantity: Number(selectedProduct.value.quantity),
             imageUrls: finalImageUrls
         });
-
+        toast(`Produto ${isEditing ? 'atualizado' : 'criado'} com sucesso!`, 'success');
         feedbackStore.show(`Produto ${isEditing ? 'atualizado' : 'criado'} com sucesso!`, 'success');
         isDialogVisible.value = false;
         await loadData();
     } catch (error) {
         feedbackStore.show('Erro ao salvar produto.', 'error');
+        toast('Erro ao salvar produto.', 'error');
     } finally {
         loading.value = false;
     }

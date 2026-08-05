@@ -10,6 +10,7 @@ import { useUiStore } from '@/stores/ui';
 import { productService } from '@/services/productService';
 import { categoryService } from '@/services/categoryService';
 import type { Category, Product, Subcategory } from '@/types';
+import { toast } from '@/utils/swal/toast';
 
 const route = useRoute();
 const cartStore = useCartStore();
@@ -66,6 +67,7 @@ async function loadData() {
         subcategories.value = subData;
     } catch (error) {
         console.error("Erro ao carregar vitrine:", error);
+        toast('Erro ao carregar vitrine.', 'error');
     } finally {
         loading.value = false;
     }

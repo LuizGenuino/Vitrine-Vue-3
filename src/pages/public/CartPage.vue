@@ -6,6 +6,7 @@ import { useCartStore } from '@/stores/cart';
 import { useStorefrontStore } from '@/stores/storefront';
 import { useWhatsApp } from '@/composables/useWhatsApp';
 import { formatCurrency } from '@/utils/format';
+import { toast } from '@/utils/swal/toast';
 
 const route = useRoute();
 const router = useRouter();
@@ -61,6 +62,7 @@ const clearCartWithConfirm = () => {
 
         snackbar.value = true
         text.value = ['Seu carrinho foi Limpo!', 'info']
+        toast('Seu carrinho foi Limpo!', 'info');
     }
 };
 
@@ -78,6 +80,7 @@ async function searchCep() {
 
         if (data.erro) {
             cepError.value = 'CEP não encontrado.';
+            toast('CEP não encontrado. Tente preencher manualmente.', 'error');
             return;
         }
 
@@ -85,10 +88,11 @@ async function searchCep() {
         checkoutData.address = data.logradouro;
         checkoutData.neighborhood = data.bairro;
         checkoutData.city = `${data.localidade} - ${data.uf}`;
-
+        toast('Endereço preenchido automaticamente!', 'success');
         // Foco automático no número após o preenchimento (Opcional via ref)
     } catch (error) {
         cepError.value = 'Erro ao buscar CEP. Tente preencher manualmente.';
+        toast('Erro ao buscar CEP. Tente preencher manualmente.', 'error');
     } finally {
         isCepLoading.value = false;
     }
@@ -143,7 +147,7 @@ watch(() => checkoutData.cep, (newCep: string) => {
                                                 <v-btn icon="mdi-minus" size="x-small"
                                                     @click="cartStore.updateQuantity(item.productId, item.quantity - 1, item.storeSlug)" />
                                                 <v-btn disabled class="px-4 font-weight-bold">{{ item.quantity
-                                                    }}</v-btn>
+                                                }}</v-btn>
                                                 <v-btn icon="mdi-plus" size="x-small"
                                                     @click="cartStore.updateQuantity(item.productId, item.quantity + 1, item.storeSlug)" />
                                             </v-btn-toggle>

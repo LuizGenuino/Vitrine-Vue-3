@@ -18,6 +18,7 @@ import ColorPickerField from '@/components/base/ColorPickerField.vue';
 import DashboardPreviewPanel from '@/components/dashboard/DashboardPreviewPanel.vue';
 import OnboardingChecklist from '@/components/dashboard/OnboardingChecklist.vue';
 import type { StoreSettings, StoreSettingsForm } from '@/types';
+import { toast } from '@/utils/swal/toast';
 
 const authStore = useAuthStore();
 const useStore = useStorefrontStore();
@@ -64,28 +65,34 @@ function patchForm(payload: Partial<StoreSettings>) {
 }
 
 async function loadCounts(ownerId: string) {
-    const [categories, products] = await Promise.all([
-        categoryService.listCategories(ownerId),
-        productService.listByOwner(ownerId),
-    ]);
+    try {
+        const [categories, products] = await Promise.all([
+            categoryService.listCategories(ownerId),
+            productService.listByOwner(ownerId),
+        ]);
 
-    categoriesCount.value = categories.length;
-    productsCount.value = products.length;
+        categoriesCount.value = categories.length;
+        productsCount.value = products.length;
 
-    const formdata = {
-        ownerId: ownerId,
-        slug: useStore.settings.slug,
-        storeName: useStore.settings.storeName,
-        title: useStore.settings.title,
-        subtitle: useStore.settings.subtitle,
-        primaryColor: useStore.settings.branding.primaryColor,
-        secondaryColor: useStore.settings.branding.secondaryColor,
-        logoUrl: useStore.settings.branding.logoUrl,
-        bannerUrl: useStore.settings.branding.bannerUrl,
-        whatsappNumber: useStore.settings.channels.whatsappNumber,
-        activePlanId: useStore.settings.planSnapshot?.name,
-    } as StoreSettingsForm
-    patchForm(formdata);
+        const formdata = {
+            ownerId: ownerId,
+            slug: useStore.settings.slug,
+            storeName: useStore.settings.storeName,
+            title: useStore.settings.title,
+            subtitle: useStore.settings.subtitle,
+            primaryColor: useStore.settings.branding.primaryColor,
+            secondaryColor: useStore.settings.branding.secondaryColor,
+            logoUrl: useStore.settings.branding.logoUrl,
+            bannerUrl: useStore.settings.branding.bannerUrl,
+            whatsappNumber: useStore.settings.channels.whatsappNumber,
+            activePlanId: useStore.settings.planSnapshot?.name,
+        } as StoreSettingsForm
+        patchForm(formdata);
+    } catch (error) {
+        console.error('Erro ao carregar contagens:', error);
+        toast('Erro ao carregar contagens de categorias e produtos.', 'error');
+    }
+
 }
 
 onMounted(async () => {
@@ -105,6 +112,11 @@ async function onFileSelected(event: any, field: 'logoUrl' | 'bannerUrl', folder
         const [imageUrl] = await uploadMany(authStore.user!.uid, folder, [file]);
         patchForm({ [field]: imageUrl });
         success.value = "Imagem atualizada com sucesso!";
+        toast('Imagem atualizada com sucesso!', 'success');
+    }).catch((err) => {
+        console.error('Erro ao enviar imagem:', err);
+        error.value = 'Erro ao enviar imagem.';
+        toast('Erro ao enviar imagem.', 'error');
     });
 }
 
@@ -134,6 +146,10 @@ async function handleSave() {
         };
         await storeService.save(payload);
         success.value = 'Configurações salvas!';
+        toast('Configurações salvas com sucesso!', 'success');
+    }).catch((err) => {
+        error.value = 'Erro ao salvar configurações.';
+        toast('Erro ao salvar configurações.', 'error');
     });
 }
 </script>
@@ -220,7 +236,8 @@ async function handleSave() {
                                 <v-icon icon="mdi-image-outline" size="32" color="primary" />
                                 <div class="flex-grow-1">
                                     <div class="text-subtitle-2 font-weight-bold">Banner de Fundo</div>
-                                    <div class="text-caption hidden-sm-and-down">Imagem panorâmica para o topo da vitrine</div>
+                                    <div class="text-caption hidden-sm-and-down">Imagem panorâmica para o topo da
+                                        vitrine</div>
                                 </div>
                                 <v-btn variant="flat" color="primary" rounded="pill" size="small"
                                     @click="bannerInput?.click()">

@@ -5,6 +5,7 @@ import AppTextField from '@/components/base/AppTextField.vue';
 import { useAuthStore } from '@/stores/auth';
 import { useAsyncState } from '@/composables/useAsyncState';
 import { isFirebaseConfigured } from '@/services/firebase';
+import { toast } from '@/utils/swal/toast';
 
 const router = useRouter();
 const authStore = useAuthStore();
@@ -22,9 +23,11 @@ async function handleSubmit() {
         try {
             await authStore.login(form.email, form.password);
             success.value = 'Login realizado com sucesso.';
+            toast('Login realizado com sucesso.', 'success');
             router.push({ name: 'dashboard-overview' });
         } catch (err) {
             error.value = 'Erro de autenticação. Verifique suas credenciais.';
+            toast('Erro de autenticação. Verifique suas credenciais.', 'error');
         }
     });
 }
@@ -37,6 +40,10 @@ async function handlepasswordReset() {
     await run(async () => {
         await authStore.sendPasswordResetEmail(form.email);
         success.value = 'E-mail de recuperação enviado.';
+        toast('E-mail de recuperação enviado.', 'success');
+    }).catch((err) => {
+        error.value = 'Erro ao enviar e-mail de recuperação.';
+        toast('Erro ao enviar e-mail de recuperação.', 'error');
     });
 }
 </script>

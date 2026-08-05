@@ -5,6 +5,7 @@ import { productService } from '@/services/productService';
 import { formatCurrency } from '@/utils/format';
 import EmptyState from '@/components/base/EmptyState.vue';
 import type { Category, Product } from '@/types';
+import { toast } from '@/utils/swal/toast';
 
 interface Props {
     products: Product[];
@@ -67,8 +68,10 @@ async function handleToggleStatus(product: Product) {
         await productService.save({ ...product, status: newStatus });
         emit('loadData');
         feedbackStore.show(`Produto agora é ${newStatus === 'active' ? 'visível' : 'um rascunho'}.`, 'success');
+        toast(`Produto agora é ${newStatus === 'active' ? 'visível' : 'um rascunho'}.`, 'success');
     } catch (e) {
         feedbackStore.show('Erro ao alterar status.', 'error');
+        toast('Erro ao alterar status.', 'error');
     }
 }
 
@@ -79,7 +82,11 @@ async function confirmDelete(product: Product) {
         loading.value = true;
         await productService.remove(product.id!);
         emit('loadData');
-        feedbackStore.show('Produto removido do catálogo.', 'success');
+        feedbackStore.show('Produto removido do catálogo.', 'info');
+        toast('Produto removido do catálogo.', 'info');
+    } catch (e) {
+        feedbackStore.show('Erro ao remover produto.', 'error');
+        toast('Erro ao remover produto.', 'error');
     } finally {
         loading.value = false;
     }
@@ -93,8 +100,10 @@ async function updateStock(product: Product, newQuantity: number) {
         await productService.save({ ...product, quantity: newQuantity });
         emit('loadData');
         feedbackStore.show('Estoque atualizado!', 'success');
+        toast('Estoque atualizado com sucesso!', 'success');
     } catch (e) {
         feedbackStore.show('Erro ao atualizar estoque.', 'error');
+        toast('Erro ao atualizar estoque.', 'error');
     } finally {
         stockLoadingId.value = null;
     }

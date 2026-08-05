@@ -12,6 +12,7 @@ import DashboardMetricCard from '@/components/dashboard/DashboardMetricCard.vue'
 import OnboardingChecklist from '@/components/dashboard/OnboardingChecklist.vue';
 
 import { useFeedbackStore } from '@/stores/feedback';
+import { toast } from '@/utils/swal/toast';
 
 const feedbackStore = useFeedbackStore();
 const router = useRouter();
@@ -51,6 +52,10 @@ async function populateDemo() {
     try {
         await demoSeedService.seed(authStore.user.uid);
         await useStore.loadDataStore(authStore.user?.uid);
+        toast('Dados demo populados com sucesso.', 'success');
+    } catch (error) {
+        console.error('Erro ao popular dados demo:', error);
+        toast('Erro ao popular dados demo.', 'error');
     } finally {
         seeding.value = false;
     }
@@ -60,8 +65,11 @@ async function copiarLink() {
     try {
         await navigator.clipboard.writeText(useStore.settings.slug ? `${window.location.origin}/s/${useStore.settings.slug}` : '');
         feedbackStore.show(`Link copiado com sucesso!`, 'success');
+        toast('Link copiado com sucesso!', 'success');
     } catch (err) {
         console.error('Erro ao copiar: ', err);
+        feedbackStore.show(`Erro ao copiar o link.`, 'error');
+        toast('Erro ao copiar o link.', 'error');
     }
 }
 
@@ -150,7 +158,7 @@ async function copiarLink() {
                     <div class="d-flex justify-space-between text-caption mb-2">
                         <span class="font-weight-bold">Capacidade do Catálogo</span>
                         <span class="text-medium-emphasis">{{ useStore.products.length }} / {{ currentPlan.productLimit
-                            }}
+                        }}
                             produtos</span>
                     </div>
                     <v-progress-linear :model-value="usagePercent" :color="isNearLimit ? 'warning' : 'primary'"
