@@ -1,6 +1,7 @@
 // @ts-nocheck
 import { createRouter, createWebHistory } from 'vue-router';
-import { useAuthStore } from '@/stores/auth';
+import { useAuthStore } from '@/stores/auth.store';
+import { requireAuth } from './guards';
 
 const router = createRouter({
     history: createWebHistory(),
@@ -28,6 +29,7 @@ const router = createRouter({
         {
             path: '/auth',
             component: () => import('@/layouts/AuthLayout.vue'),
+            beforeEnter: requireAuth,
             children: [
                 { path: 'login', name: 'login', component: () => import('@/pages/auth/LoginPage.vue') },
                 { path: 'cadastro', name: 'register', component: () => import('@/pages/auth/RegisterPage.vue') },
@@ -59,6 +61,44 @@ const router = createRouter({
                     name: 'dashboard-plans',
                     component: () => import('@/pages/dashboard/SubscriptionPlansPage.vue'),
                 },
+                //sudo area
+                {
+                    path: 'admin',
+                    beforeEnter: requireRole(['OWNER', 'ADMIN']),
+                    children: [
+                        {
+                            path: 'usuarios',
+                            name: 'dashboard-users',
+                            beforeEnter: requireRole(['OWNER', 'ADMIN']),
+                            component: () => import('@/pages/dashboard/UsersPage.vue'),
+                        },
+                        {
+                            path: 'clientes',
+                            name: 'dashboard-customers',
+                            beforeEnter: requireRole(['OWNER', 'ADMIN']),
+                            component: () => import('@/pages/dashboard/CustomersPage.vue'),
+                        },
+                        {
+                            path: 'lojas',
+                            name: 'dashboard-stores',
+                            beforeEnter: requireRole(['OWNER', 'ADMIN']),
+                            component: () => import('@/pages/dashboard/StoresPage.vue'),
+                        },
+                        {
+                            path: 'planos',
+                            name: 'dashboard-plans',
+                            beforeEnter: requireRole(['OWNER', 'ADMIN']),
+                            component: () => import('@/pages/dashboard/SubscriptionPlansPage.vue'),
+                        },
+                        {
+                            path: 'configuracoes-gerais',
+                            name: 'dashboard-general-settings',
+                            beforeEnter: requireRole(['OWNER', 'ADMIN']),
+                            component: () => import('@/pages/dashboard/GeneralSettingsPage.vue'),
+                        },
+                    ]
+                }
+
             ],
         },
     ],
