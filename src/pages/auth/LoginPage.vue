@@ -2,50 +2,38 @@
 import { reactive, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import AppTextField from '@/components/base/AppTextField.vue';
-import { useAuthStore } from '@/stores/auth';
-import { useAsyncState } from '@/composables/useAsyncState';
-import { isFirebaseConfigured } from '@/services/firebase';
-import { toast } from '@/utils/swal/toast';
+import { useAuthStore } from '@/stores/auth.store';
+import { useAsyncAction } from '@/composables/useAsyncAction';
+import { useRoute } from 'vuetify/lib/composables/router.mjs';
+import { authRules } from '@/lib/validators';
 
 const router = useRouter();
-const authStore = useAuthStore();
-const { loading, error, run } = useAsyncState();
-const success = ref('');
+const route: any = useRoute()
+const auth = useAuthStore();
+const { execute: submitLogin, loading } = useAsyncAction(
+    async () => {
+        await auth.signIn(form.email, form.password)
+        // após signIn, o onAuthStateChange já populou profile + stores
+        const redirect = (route.query.redirect as string) || '/dashboard'
+        await router.push(redirect)
+    },
+    { successMsg: 'Bem-vindo(a) de volta! 🎉' }
+)
+
+const showPass = ref(false)
+const formRef = ref()
 
 const form = reactive({
     email: '',
     password: '',
 });
 
-async function handleSubmit() {
-    success.value = '';
-    await run(async () => {
-        try {
-            await authStore.login(form.email, form.password);
-            success.value = 'Login realizado com sucesso.';
-            toast('Login realizado com sucesso.', 'success');
-            router.push({ name: 'dashboard-overview' });
-        } catch (err) {
-            error.value = 'Erro de autenticação. Verifique suas credenciais.';
-            toast('Erro de autenticação. Verifique suas credenciais.', 'error');
-        }
-    });
+async function onSubmit() {
+    const { valid } = await formRef.value.validate()
+    if (!valid) return
+    await submitLogin()
 }
-async function handlepasswordReset() {
-    if (!form.email) {
-        error.value = 'Por favor, insira seu e-mail para recuperação.';
-        return;
-    }
-    success.value = '';
-    await run(async () => {
-        await authStore.sendPasswordResetEmail(form.email);
-        success.value = 'E-mail de recuperação enviado.';
-        toast('E-mail de recuperação enviado.', 'success');
-    }).catch((err) => {
-        error.value = 'Erro ao enviar e-mail de recuperação.';
-        toast('Erro ao enviar e-mail de recuperação.', 'error');
-    });
-}
+
 </script>
 
 
@@ -55,29 +43,36 @@ async function handlepasswordReset() {
         <div class="text-h4 font-weight-bold mb-2">Entre na sua conta</div>
         <div class="text-body-1 text-medium-emphasis mb-6">Gerencie sua vitrine, produtos e identidade visual.</div>
 
-        <v-alert v-if="!isFirebaseConfigured" type="warning" variant="tonal" class="mb-4">
-            Configure as variáveis do Firebase antes de autenticar.
-        </v-alert>
 
-        <v-alert v-if="error" type="error" variant="tonal" class="mb-4">{{ error }}</v-alert>
-        <v-alert v-if="success" type="success" variant="tonal" class="mb-4">{{ success }}</v-alert>
-
-        <v-form @submit.prevent="handleSubmit">
+        <v-form ref="formRef" @submit.prevent="onSubmit">
             <div class="d-flex flex-column ga-4">
-                <AppTextField v-model="form.email" label="E-mail" type="email"
-                    hint="Use o e-mail cadastrado no Firebase Auth" />
-                <AppTextField v-model="form.password" label="Senha" type="password" />
-                <div>
-                    <v-btn variant="text" color="primary" @click="handlepasswordReset()">Esqueci
-                        minha senha</v-btn>
+                <AppTextField v-model="form.email" label="E-mail" type="email" autocomplete="email"
+                    prepend-inner-icon="mdi-email-outline" :rules="[authRules.required, authRules.email]"
+                    :disabled="loading" />
+                <AppTextField v-model="form.password" label="Senha" :type="showPass ? 'text' : 'password'"
+                    autocomplete="current-password" prepend-inner-icon="mdi-lock-outline"
+                    :append-inner-icon="showPass ? 'mdi-eye-off' : 'mdi-eye'" @click:append-inner="showPass = !showPass"
+                    :rules="[authRules.required]" :disabled="loading" />
+                <div class="d-flex justify-end mb-4">
+                    <router-link :to="{ name: 'forgot-password' }"
+                        class="text-body-2 text-primary text-decoration-none">
+                        Esqueci minha senha
+                    </router-link>
                 </div>
                 <v-btn :loading="loading" color="primary" size="large" type="submit" block>Entrar</v-btn>
             </div>
         </v-form>
 
-        <div class="text-body-2 text-medium-emphasis mt-6">
-            Ainda não tem conta?
-            <router-link class="font-weight-bold" :to="{ name: 'register' }">Criar cadastro</router-link>
+        <v-divider class="my-6">ou</v-divider>
+
+        <div class="text-center">
+            <span class="text-body-2 text-medium-emphasis">
+                Ainda não tem conta?
+            </span>
+            <router-link :to="{ name: 'register' }"
+                class="text-body-2 text-primary text-decoration-none font-weight-medium ml-1">
+                Cadastre-se grátis
+            </router-link>
         </div>
     </v-card>
 </template>

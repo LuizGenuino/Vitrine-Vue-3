@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
-import { useAuthStore } from '@/stores/auth';
+import { useAuthStore } from '@/stores/auth.store';
 import { useStorefrontStore } from '@/stores/storefront';
 import { planService } from '@/services/planService';
 import ThemeToggle from '@/components/base/ThemeToggle.vue';

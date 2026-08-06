@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from 'vue';
-import { useAuthStore } from '@/stores/auth';
+import { useAuthStore } from '@/stores/auth.store';
 import { categoryService } from '@/services/categoryService';
 import { slugify } from '@/utils/format';
 import AppSectionCard from '@/components/base/AppSectionCard.vue';

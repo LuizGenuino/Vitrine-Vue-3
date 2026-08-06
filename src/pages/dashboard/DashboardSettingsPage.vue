@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref, watch } from 'vue';
-import { useAuthStore } from '@/stores/auth';
+import { useAuthStore } from '@/stores/auth.store';
 import { useStorefrontStore } from '@/stores/storefront';
 import { storeService } from '@/services/storeService';
 import { categoryService } from '@/services/categoryService';

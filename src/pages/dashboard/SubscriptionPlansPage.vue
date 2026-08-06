@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
-import { useAuthStore } from '@/stores/auth';
+import { useAuthStore } from '@/stores/auth.store';
 import { useStorefrontStore } from '@/stores/storefront';
 import { useFeedbackStore } from '@/stores/feedback';
 import { storeService } from '@/services/storeService';

@@ -15,13 +15,13 @@ export const useAuthStore = defineStore('auth', () => {
     const loading = ref(true)
 
     const isAuthenticated = computed(() => !!session.value)
-const currentStore = computed(() => {
-    const relation = stores.value.find(
-        (s: StoresWithRelations) => s.store_id === currentStoreId.value
-    );
+    const currentStore = computed(() => {
+        const relation = stores.value.find(
+            (s: StoresWithRelations) => s.store_id === currentStoreId.value
+        );
 
-    return relation?.store ?? null;
-});
+        return relation?.store ?? null;
+    });
     const currentRole = computed(() =>
         stores.value.find(s => s.store_id === currentStoreId.value)?.role ?? null
     )
@@ -101,9 +101,14 @@ const currentStore = computed(() => {
         if (error) throw error
     }
 
+    async function updatePassword(newPassword: string) {
+        const { error } = await supabase.auth.updateUser({ password: newPassword })
+        if (error) throw error
+    }
+
     return {
         session, user, profile, stores, currentStoreId,
         isAuthenticated, currentStore, currentRole, loading,
-        init, signIn, signUp, signOut, resetPassword, switchStore,
+        init, signIn, signUp, signOut, resetPassword, switchStore, updatePassword
     }
 })
