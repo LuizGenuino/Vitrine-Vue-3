@@ -4,18 +4,14 @@ import { useRouter } from 'vue-router';
 import AppTextField from '@/components/base/AppTextField.vue';
 import { useAuthStore } from '@/stores/auth.store';
 import { useAsyncAction } from '@/composables/useAsyncAction';
-import { useRoute } from 'vuetify/lib/composables/router.mjs';
 import { authRules } from '@/lib/validators';
 
 const router = useRouter();
-const route: any = useRoute()
 const auth = useAuthStore();
 const { execute: submitLogin, loading } = useAsyncAction(
     async () => {
         await auth.signIn(form.email, form.password)
-        // após signIn, o onAuthStateChange já populou profile + stores
-        const redirect = (route.query.redirect as string) || '/dashboard'
-        await router.push(redirect)
+        await router.push({name: 'dashboard-overview'})
     },
     { successMsg: 'Bem-vindo(a) de volta! 🎉' }
 )
