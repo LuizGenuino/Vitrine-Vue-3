@@ -11,7 +11,7 @@ const auth = useAuthStore();
 const { execute: submitLogin, loading } = useAsyncAction(
     async () => {
         await auth.signIn(form.email, form.password)
-        await router.push({name: 'dashboard-overview'})
+        await router.push({ name: 'overview' })
     },
     { successMsg: 'Bem-vindo(a) de volta! 🎉' }
 )

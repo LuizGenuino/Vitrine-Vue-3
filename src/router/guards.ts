@@ -8,8 +8,8 @@ export const requireAuth: NavigationGuard = async (to) => {
     if (!auth.isAuthenticated) {
         return { name: 'login', query: { redirect: to.fullPath } }
     }
-    if (!auth.currentStoreId && to.name !== 'dashboard-overview') {
-        return { name: 'dashboard-overview' }
+    if (!auth.currentStoreId && to.name !== 'overview') {
+        return { name: 'overview' }
     }
 }
 

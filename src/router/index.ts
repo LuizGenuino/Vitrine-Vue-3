@@ -44,25 +44,25 @@ const router = createRouter({
             beforeEnter: requireAuth,
             meta: { requiresAuth: true },
             children: [
-                { path: '', name: 'dashboard-overview', component: () => import('@/pages/dashboard/DashboardOverviewPage.vue') },
+                { path: '', name: 'overview', component: () => import('@/pages/dashboard/DashboardOverviewPage.vue') },
                 {
                     path: 'configuracoes',
-                    name: 'dashboard-settings',
+                    name: 'settings',
                     component: () => import('@/pages/dashboard/DashboardSettingsPage.vue'),
                 },
                 {
                     path: 'categorias',
-                    name: 'dashboard-categories',
+                    name: 'categories',
                     component: () => import('@/pages/dashboard/CategoriesPage.vue'),
                 },
                 {
                     path: 'produtos',
-                    name: 'dashboard-products',
+                    name: 'products',
                     component: () => import('@/pages/dashboard/ProductsPage.vue'),
                 },
                 {
                     path: 'planos',
-                    name: 'dashboard-plans',
+                    name: 'plans',
                     component: () => import('@/pages/dashboard/SubscriptionPlansPage.vue'),
                 },
                 //sudo area
@@ -72,31 +72,31 @@ const router = createRouter({
                 //     children: [
                 //         {
                 //             path: 'usuarios',
-                //             name: 'dashboard-users',
+                //             name: 'users',
                 //             beforeEnter: requireRole(['OWNER', 'ADMIN']),
                 //             component: () => import('@/pages/dashboard/UsersPage.vue'),
                 //         },
                 //         {
                 //             path: 'clientes',
-                //             name: 'dashboard-customers',
+                //             name: 'customers',
                 //             beforeEnter: requireRole(['OWNER', 'ADMIN']),
                 //             component: () => import('@/pages/dashboard/CustomersPage.vue'),
                 //         },
                 //         {
                 //             path: 'lojas',
-                //             name: 'dashboard-stores',
+                //             name: 'stores',
                 //             beforeEnter: requireRole(['OWNER', 'ADMIN']),
                 //             component: () => import('@/pages/dashboard/StoresPage.vue'),
                 //         },
                 //         {
                 //             path: 'planos',
-                //             name: 'dashboard-plans',
+                //             name: 'plans',
                 //             beforeEnter: requireRole(['OWNER', 'ADMIN']),
                 //             component: () => import('@/pages/dashboard/SubscriptionPlansPage.vue'),
                 //         },
                 //         {
                 //             path: 'configuracoes-gerais',
-                //             name: 'dashboard-general-settings',
+                //             name: 'general-settings',
                 //             beforeEnter: requireRole(['OWNER', 'ADMIN']),
                 //             component: () => import('@/pages/dashboard/GeneralSettingsPage.vue'),
                 //         },
@@ -128,7 +128,7 @@ router.beforeEach(async (to) => {
     }
 
     if ((to.name === 'login' || to.name === 'register') && authStore.isAuthenticated) {
-        return { name: 'dashboard-overview' };
+        return { name: 'overview' };
     }
 
     return true;
