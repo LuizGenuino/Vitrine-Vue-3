@@ -1,280 +1,508 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
-import { useFeedbackStore } from '@/stores/feedback';
-import { productService } from '@/services/productService';
-import { formatCurrency } from '@/utils/format';
-import EmptyState from '@/components/base/EmptyState.vue';
-import type { Category, Product } from '@/types';
-import { toast } from '@/utils/swal/toast';
+import { computed, ref } from 'vue'
+import { useDisplay } from 'vuetify'
+
+import EmptyState from '@/components/base/EmptyState.vue'
+
+import type {
+    Product, ProductWithRelations, Category, ProductStatus,
+} from '@/types/models'
+
+/* -------------------------------------------------------------------------- */
+/*  Props & Emits                                                             */
+/* -------------------------------------------------------------------------- */
 
 interface Props {
-    products: Product[];
-    categories: Category[];
-    isLimitReached: boolean;
+    products: ProductWithRelations[]
+    stockMap: Record<string, number>
+    categories: Category[]
+    totalItems: number
+    loading: boolean
+    canManage: boolean
+    page: number
+    itemsPerPage: number
+    sortBy: string
+    ascending: boolean
+    lowStockThreshold?: number
 }
 
-const props = defineProps<Props>();
-const emit = defineEmits(['loadData', 'handleCreate']);
+const props = withDefaults(defineProps<Props>(), {
+    lowStockThreshold: 5,
+})
 
-const isDialogVisible = defineModel<boolean>({ required: true });
-const loading = defineModel<boolean>('loading', { required: true });
-const selectedProduct = defineModel<any>('selectedProduct', { required: true });
-const pendingFiles = defineModel<File[]>('pendingFiles', { required: true });
+const emit = defineEmits<{
+    edit: [product: ProductWithRelations]
+    delete: [product: Product]
+    duplicate: [product: Product]
+    view: [product: Product]
+    toggleStatus: [product: Product]
+    toggleFeatured: [product: Product]
+    adjustStock: [payload: { product: Product; delta: number; reason?: string }]
+    'update:page': [n: number]
+    'update:itemsPerPage': [n: number]
+    'update:sortBy': [s: string]
+    'update:ascending': [b: boolean]
+}>()
 
-const feedbackStore = useFeedbackStore();
+/* -------------------------------------------------------------------------- */
+/*  Estado local                                                              */
+/* -------------------------------------------------------------------------- */
 
-// Filtros
-const search = ref('');
-const statusFilter = ref('all');
-const categoryFilter = ref('all');
-const stockLoadingId = ref<string | null>(null);
+const display = useDisplay()
+const stockLoadingId = ref<string | null>(null)
+const stockDrafts = reactive<Record<string, number>>({})
 
-// --- PERFORMANCE: Cache de Categorias ---
-// Senior tip: Evite .find() dentro de loops de renderização (O(n*m)). 
-// Use um Map para busca instantânea O(1).
-const categoryMap = computed(() => {
-    return new Map(props.categories.map(cat => [cat.id, cat.name]));
-});
+// Stepper mobile: acúmulo antes de disparar movimentação
+const quickAdjustDialog = reactive({
+    open: false,
+    product: null as Product | null,
+    delta: 0,
+    reason: '',
+})
 
-// --- FILTRAGEM ---
-const filteredProducts = computed(() => {
-    const query = search.value.toLowerCase().trim();
-    return props.products.filter(p => {
-        const matchesSearch = !query || p.name.toLowerCase().includes(query) || p.code?.toLowerCase().includes(query);
-        const matchesStatus = statusFilter.value === 'all' || p.status === statusFilter.value;
-        const matchesCategory = categoryFilter.value === 'all' || p.categoryId === categoryFilter.value;
-        return matchesSearch && matchesStatus && matchesCategory;
-    });
-});
+import { reactive } from 'vue'
+import type { SortItem } from 'vuetify/lib/components/VDataTable/composables/sort.mjs'
 
-const hasActiveFilters = computed(() => search.value || statusFilter.value !== 'all' || categoryFilter.value !== 'all');
+/* -------------------------------------------------------------------------- */
+/*  Helpers                                                                   */
+/* -------------------------------------------------------------------------- */
 
-const clearFilters = () => {
-    search.value = '';
-    statusFilter.value = 'all';
-    categoryFilter.value = 'all';
-};
+const brl = (v: number | string | null | undefined) =>
+    Number(v ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 
-// --- AÇÕES ---
-function handleEdit(product: Product) {
-    selectedProduct.value = JSON.parse(JSON.stringify(product));
-    pendingFiles.value = [];
-    isDialogVisible.value = true;
+const categoryMap = computed(
+    () => new Map(props.categories.map(c => [c.id, c.name])),
+)
+
+const primaryImage = (p: ProductWithRelations): string => {
+    const primary = p.product_images?.find(i => i.is_primary)
+    return primary?.url ?? p.product_images?.[0]?.url ?? ''
 }
 
-async function handleToggleStatus(product: Product) {
-    const newStatus = product.status === 'active' ? 'draft' : 'active';
+const stockOf = (p: Product): number => props.stockMap[p.id] ?? 0
+
+interface StockBadge {
+    color: string
+    label: string
+    icon: string
+}
+function stockBadge(qty: number): StockBadge {
+    if (qty <= 0)
+        return { color: 'error', label: 'Esgotado', icon: 'mdi-close-octagon' }
+    if (qty <= props.lowStockThreshold)
+        return { color: 'warning', label: 'Baixo', icon: 'mdi-alert' }
+    if (qty <= 20)
+        return { color: 'info', label: 'Moderado', icon: 'mdi-package-variant' }
+    return { color: 'success', label: 'Em estoque', icon: 'mdi-check-circle' }
+}
+
+const statusMeta: Record<ProductStatus, { label: string; color: string; icon: string }> = {
+    ACTIVE: { label: 'Ativo', color: 'success', icon: 'mdi-eye-outline' },
+    DRAFT: { label: 'Rascunho', color: 'grey', icon: 'mdi-file-document-edit-outline' },
+    INACTIVE: { label: 'Inativo', color: 'warning', icon: 'mdi-eye-off-outline' },
+    ARCHIVED: { label: 'Arquivado', color: 'grey', icon: 'mdi-archive-outline' },
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Ajuste de estoque via ledger                                              */
+/*  Nunca chamamos UPDATE em products — sempre insert de movimento             */
+/* -------------------------------------------------------------------------- */
+
+function commitStockAdjustment(product: Product, targetQty: number) {
+    const currentQty = stockOf(product)
+    const delta = targetQty - currentQty
+    if (delta === 0 || Number.isNaN(delta)) return
+
+    stockLoadingId.value = product.id
     try {
-        await productService.save({ ...product, status: newStatus });
-        emit('loadData');
-        feedbackStore.show(`Produto agora é ${newStatus === 'active' ? 'visível' : 'um rascunho'}.`, 'success');
-        toast(`Produto agora é ${newStatus === 'active' ? 'visível' : 'um rascunho'}.`, 'success');
-    } catch (e) {
-        feedbackStore.show('Erro ao alterar status.', 'error');
-        toast('Erro ao alterar status.', 'error');
-    }
-}
-
-async function confirmDelete(product: Product) {
-    if (!confirm(`Deseja excluir "${product.name}"? Esta ação não pode ser desfeita.`)) return;
-
-    try {
-        loading.value = true;
-        await productService.remove(product.id!);
-        emit('loadData');
-        feedbackStore.show('Produto removido do catálogo.', 'info');
-        toast('Produto removido do catálogo.', 'info');
-    } catch (e) {
-        feedbackStore.show('Erro ao remover produto.', 'error');
-        toast('Erro ao remover produto.', 'error');
+        emit('adjustStock', {
+            product,
+            delta,
+            reason: `Ajuste manual (${currentQty} → ${targetQty})`,
+        })
     } finally {
-        loading.value = false;
+        // O pai controla o feedback; liberamos assim que o evento é emitido.
+        setTimeout(() => { stockLoadingId.value = null }, 300)
     }
 }
 
-async function updateStock(product: Product, newQuantity: number) {
-    if (newQuantity < 0 || newQuantity === product.quantity) return;
+function onStockBlur(product: Product, event: FocusEvent) {
+    const input = event.target as HTMLInputElement
+    const value = parseInt(input.value, 10)
+    if (!Number.isNaN(value) && value >= 0) commitStockAdjustment(product, value)
+    delete stockDrafts[product.id]
+}
 
-    stockLoadingId.value = product.id!;
-    try {
-        await productService.save({ ...product, quantity: newQuantity });
-        emit('loadData');
-        feedbackStore.show('Estoque atualizado!', 'success');
-        toast('Estoque atualizado com sucesso!', 'success');
-    } catch (e) {
-        feedbackStore.show('Erro ao atualizar estoque.', 'error');
-        toast('Erro ao atualizar estoque.', 'error');
-    } finally {
-        stockLoadingId.value = null;
+function stepStock(product: Product, direction: 1 | -1) {
+    const current = stockDrafts[product.id] ?? stockOf(product)
+    const next = Math.max(0, current + direction)
+    stockDrafts[product.id] = next
+    commitStockAdjustment(product, next)
+}
+
+/* -------------------------------------------------------------------------- */
+/*  v-data-table-server integration                                           */
+/* -------------------------------------------------------------------------- */
+
+const headers = [
+    { title: 'Produto', key: 'name', sortable: true, minWidth: 260 },
+    { title: 'SKU', key: 'sku', sortable: true, align: 'start' as const },
+    { title: 'Categoria', key: 'category', sortable: false },
+    { title: 'Custo', key: 'cost_price', sortable: true, align: 'end' as const },
+    { title: 'Preço', key: 'price', sortable: true, align: 'end' as const },
+    { title: 'Estoque', key: 'stock', sortable: false, align: 'start' as const, width: 200 },
+    { title: 'Status', key: 'status', sortable: true, align: 'center' as const },
+    { title: '', key: 'actions', sortable: false, align: 'end' as const, width: 120 },
+]
+
+function onOptionsChange(opts: any) {
+    if (opts.page !== props.page) emit('update:page', opts.page)
+    if (opts.itemsPerPage !== props.itemsPerPage) emit('update:itemsPerPage', opts.itemsPerPage)
+    const sb = opts.sortBy?.[0]
+    if (sb) {
+        if (sb.key !== props.sortBy) emit('update:sortBy', sb.key)
+        if ((sb.order === 'asc') !== props.ascending) emit('update:ascending', sb.order === 'asc')
     }
 }
 
-function onStockInputBlur(product: Product, event: any) {
-    const value = parseInt(event.target.value);
-    if (!isNaN(value)) {
-        updateStock(product, value);
-    }
-}
+const currentSort = computed<SortItem[]>(() => [
+    { key: props.sortBy, order: props.ascending ? 'asc' : 'desc' as const },
+])
 
+const isEmpty = computed(() => !props.loading && props.products.length === 0)
 </script>
 
 <template>
-    <div class="product-management-wrapper ga-4 d-flex flex-column">
+    <div class="products-table-wrapper">
 
-        <v-card rounded="xl" border flat class="pa-4 pa-md-5">
-            <v-row align="center">
-                <v-col cols="12" md="4" lg="5">
-                    <v-text-field v-model="search" prepend-inner-icon="mdi-magnify"
-                        placeholder="Buscar por nome ou código..." hide-details variant="solo-filled" flat
-                        rounded="pill" class="search-input" />
-                </v-col>
+        <!-- ============================================================= -->
+        <!--  EMPTY STATE                                                  -->
+        <!-- ============================================================= -->
+        <EmptyState v-if="isEmpty" title="Nenhum produto encontrado"
+            description="Ajuste os filtros ou cadastre seu primeiro produto para começar a vender."
+            icon="mdi-package-variant-closed" />
 
-                <v-col cols="6" md="3" lg="2">
-                    <v-select v-model="categoryFilter" :items="[{ name: 'Todas Categorias', id: 'all' }, ...categories]"
-                        item-title="name" item-value="id" label="Categoria" hide-details variant="outlined"
-                        rounded="pill" density="comfortable" />
-                </v-col>
+        <!-- ============================================================= -->
+        <!--  TABELA DESKTOP (v-data-table-server)                         -->
+        <!-- ============================================================= -->
+        <v-card v-else-if="display.mdAndUp.value" rounded="xl" border flat class="overflow-hidden">
+            <v-data-table-server :headers="headers" :items="products" :items-length="totalItems"
+                :items-per-page="itemsPerPage" :page="page" :sort-by="currentSort" :loading="loading"
+                :items-per-page-options="[10, 25, 50, 100]" hover density="comfortable" class="products-table"
+                @update:options="onOptionsChange">
+                <!-- ------- COL PRODUTO ------- -->
+                <template #item.name="{ item }">
+                    <div class="d-flex align-center ga-3 py-2">
+                        <v-avatar rounded="lg" size="52" color="grey-lighten-4" class="product-thumb cursor-pointer"
+                            @click="emit('view', item)">
+                            <v-img v-if="primaryImage(item)" :src="primaryImage(item)" cover />
+                            <v-icon v-else color="grey">mdi-image-off-outline</v-icon>
+                        </v-avatar>
 
-                <v-col cols="6" md="2">
-                    <v-select v-model="statusFilter"
-                        :items="[{ title: 'Todos', value: 'all' }, { title: 'Ativos', value: 'active' }, { title: 'Rascunhos', value: 'draft' }]"
-                        label="Status" hide-details variant="outlined" rounded="pill" density="comfortable" />
-                </v-col>
-
-                <v-col cols="12" md="auto" class="d-flex flex-column flex-sm-row ga-2">
-                    <v-btn v-if="hasActiveFilters" variant="text" color="medium-emphasis" class="text-none"
-                        @click="clearFilters">
-                        Limpar
-                    </v-btn>
-                    <v-btn color="primary" prepend-icon="mdi-plus" rounded="pill" elevation="0" block
-                        :disabled="isLimitReached" @click="emit('handleCreate')" class="text-none px-6">
-                        Novo <span class="hidden-sm-and-down ml-1">Produto</span>
-                    </v-btn>
-                </v-col>
-            </v-row>
-        </v-card>
-
-        <v-card rounded="xl" border flat class="overflow-hidden">
-            <v-table v-if="$vuetify.display.mdAndUp" hover class="desktop-table">
-                <thead>
-                    <tr class="bg-grey-lighten-5">
-                        <th class="text-overline font-weight-bold">Produto</th>
-                        <th class="text-overline font-weight-bold">Custo</th>
-                        <th class="text-overline font-weight-bold">Preço</th>
-                        <th class="text-overline font-weight-bold" style="width: 160px">Estoque</th>
-                        <th class="text-overline font-weight-bold text-center">Exibir</th>
-                        <th class="text-overline font-weight-bold text-right">Ações</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr v-for="product in filteredProducts" :key="product.id">
-                        <td>
-                            <div class="d-flex align-center ga-3 py-3">
-                                <v-avatar rounded="lg" size="52" border color="grey-lighten-4">
-                                    <v-img :src="product.imageUrls[0] || '/placeholder-product.png'" cover />
-                                </v-avatar>
-                                <div class="overflow-hidden">
-                                    <div class="font-weight-bold text-truncate" style="max-width: 250px">{{ product.name
-                                    }}</div>
-                                    <div class="text-caption text-medium-emphasis">
-                                        {{ categoryMap.get(product.categoryId) }}
-                                    </div>
-                                </div>
+                        <div class="min-width-0">
+                            <div class="font-weight-bold text-truncate d-flex align-center ga-1"
+                                style="max-width: 260px">
+                                {{ item.name }}
+                                <v-tooltip v-if="item.is_featured" text="Destaque">
+                                    <template #activator="{ props: tp }">
+                                        <v-icon v-bind="tp" size="16" color="warning">mdi-star</v-icon>
+                                    </template>
+                                </v-tooltip>
                             </div>
-                        </td>
-                        <td class="font-weight-black">{{ formatCurrency(product.production_cost) }}</td>
-                        <td class="font-weight-black">{{ formatCurrency(product.price) }}</td>
-
-                        <td>
-                            <v-text-field :model-value="product.quantity" type="number" density="compact"
-                                variant="outlined" hide-details rounded="lg" class="quick-stock-input"
-                                :loading="stockLoadingId === product.id" :disabled="stockLoadingId === product.id"
-                                prepend-inner-icon="mdi-package-variant-closed"
-                                @blur="onStockInputBlur(product, $event)" @keyup.enter="$event.target.blur()" />
-                        </td>
-
-                        <td class="text-center">
-                            <v-switch :model-value="product.status === 'active'" color="success" density="compact"
-                                hide-details class="d-inline-flex" @change="handleToggleStatus(product)" />
-                        </td>
-                        <td class="text-right">
-                            <div class="d-flex justify-end ga-1">
-                                <v-btn icon="mdi-pencil-outline" variant="text" size="small" color="primary"
-                                    @click="handleEdit(product)" />
-                                <v-btn icon="mdi-trash-can-outline" variant="text" size="small" color="error"
-                                    @click="confirmDelete(product)" />
-                            </div>
-                        </td>
-                    </tr>
-                </tbody>
-            </v-table>
-
-            <div v-else class="mobile-list pa-4 d-flex flex-column ga-3">
-                <v-card v-for="product in filteredProducts" :key="product.id" variant="outlined" rounded="lg"
-                    class="pa-3">
-                    <div class="d-flex ga-3">
-                        <!-- <v-avatar rounded="lg" size="80" border><v-img :src="product.imageUrls[0]" cover /></v-avatar> -->
-                        <div class="flex-grow-1 overflow-hidden">
-                            <div class="font-weight-black text-truncate">{{ product.name }}</div>
-                            <div class="text-subtitle-1 font-weight-black text-primary">{{ formatCurrency(product.price)
-                            }}</div>
-
-                            <div class="d-flex align-center ga-3 mt-2">
-                                <span class="text-caption font-weight-bold text-uppercase opacity-60">Estoque:</span>
-                                <div class="stock-stepper d-flex align-center border rounded-pill bg-grey-lighten-4">
-                                    <v-btn icon="mdi-minus" variant="text" size="x-small"
-                                        :disabled="product.quantity <= 0 || stockLoadingId === product.id"
-                                        @click="updateStock(product, product.quantity - 1)" />
-                                    <span class="px-2 font-weight-bold text-body-2"
-                                        style="min-width: 30px; text-align: center">
-                                        {{ product.quantity }}
-                                    </span>
-                                    <v-btn icon="mdi-plus" variant="text" size="x-small"
-                                        :disabled="stockLoadingId === product.id"
-                                        @click="updateStock(product, product.quantity + 1)" />
-                                </div>
+                            <div class="text-caption text-medium-emphasis text-truncate" style="max-width: 260px">
+                                {{ item.slug }}
                             </div>
                         </div>
                     </div>
+                </template>
 
-                    <v-divider class="my-3" />
+                <!-- ------- COL SKU ------- -->
+                <template #item.sku="{ item }">
+                    <code class="sku-chip">{{ item.sku }}</code>
+                </template>
 
-                    <div class="d-flex align-center justify-space-between">
-                        <v-switch :model-value="product.status === 'active'" color="success" density="compact"
-                            hide-details @change="handleToggleStatus(product)" />
-                        <div class="d-flex ga-2">
-                            <v-btn icon="mdi-pencil" variant="tonal" size="small" color="primary"
-                                @click="handleEdit(product)" />
-                            <v-btn icon="mdi-trash-can-outline" variant="text" size="small" color="error"
-                                @click="confirmDelete(product)" />
+                <!-- ------- COL CATEGORIA ------- -->
+                <template #item.category="{ item }">
+                    <v-chip v-if="item.category_id" size="small" variant="tonal" color="primary">
+                        {{ item.category?.name ?? categoryMap.get(item.category_id) ?? '—' }}
+                    </v-chip>
+                    <span v-else class="text-caption text-disabled italic">
+                        Sem categoria
+                    </span>
+                </template>
+
+                <!-- ------- COL CUSTO ------- -->
+                <template #item.cost_price="{ item }">
+                    <span class="text-body-2 text-medium-emphasis">
+                        {{ brl(item.cost_price) }}
+                    </span>
+                </template>
+
+                <!-- ------- COL PREÇO ------- -->
+                <template #item.price="{ item }">
+                    <span class="font-weight-bold">{{ brl(item.price) }}</span>
+                    <div v-if="item.cost_price" class="text-caption text-success">
+                        +{{ Math.round(((Number(item.price) - Number(item.cost_price)) / Number(item.cost_price)) * 100)
+                        }}%
+                    </div>
+                </template>
+
+                <!-- ------- COL ESTOQUE ------- -->
+                <template #item.stock="{ item }">
+                    <div class="d-flex align-center ga-2">
+                        <v-text-field :model-value="stockDrafts[item.id] ?? stockOf(item)" type="number" min="0"
+                            density="compact" variant="outlined" hide-details rounded="lg" class="stock-input"
+                            :disabled="!canManage || stockLoadingId === item.id" :loading="stockLoadingId === item.id"
+                            @update:model-value="(v) => stockDrafts[item.id] = Number(v)"
+                            @blur="onStockBlur(item, $event)" @keyup.enter="($event.target as HTMLInputElement).blur()">
+                            <template #prepend-inner>
+                                <v-icon size="16" :color="stockBadge(stockOf(item)).color">
+                                    {{ stockBadge(stockOf(item)).icon }}
+                                </v-icon>
+                            </template>
+                        </v-text-field>
+
+                        <v-chip size="x-small" variant="tonal" :color="stockBadge(stockOf(item)).color"
+                            class="hidden-lg-and-down font-weight-medium">
+                            {{ stockBadge(stockOf(item)).label }}
+                        </v-chip>
+                    </div>
+                </template>
+
+                <!-- ------- COL STATUS ------- -->
+                <template #item.status="{ item }">
+                    <v-menu :disabled="!canManage">
+                        <template #activator="{ props: mp }">
+                            <v-chip v-bind="mp" size="small" :color="statusMeta[item.status].color" variant="tonal"
+                                :prepend-icon="statusMeta[item.status].icon" class="cursor-pointer font-weight-medium">
+                                {{ statusMeta[item.status].label }}
+                            </v-chip>
+                        </template>
+                        <v-list density="compact" min-width="180">
+                            <v-list-item prepend-icon="mdi-eye-outline" title="Ativar"
+                                :disabled="item.status === 'ACTIVE'" @click="emit('toggleStatus', item)" />
+                            <v-list-item prepend-icon="mdi-eye-off-outline" title="Desativar"
+                                :disabled="item.status !== 'ACTIVE'" @click="emit('toggleStatus', item)" />
+                            <v-divider class="my-1" />
+                            <v-list-item :prepend-icon="item.is_featured ? 'mdi-star-off' : 'mdi-star'"
+                                :title="item.is_featured ? 'Remover destaque' : 'Marcar destaque'"
+                                @click="emit('toggleFeatured', item)" />
+                        </v-list>
+                    </v-menu>
+                </template>
+
+                <!-- ------- COL AÇÕES ------- -->
+                <template #item.actions="{ item }">
+                    <div class="d-flex justify-end align-center ga-1">
+                        <v-tooltip text="Editar">
+                            <template #activator="{ props: tp }">
+                                <v-btn v-bind="tp" icon="mdi-pencil-outline" variant="text" size="small" color="primary"
+                                    :disabled="!canManage" @click="emit('edit', item)" />
+                            </template>
+                        </v-tooltip>
+
+                        <v-menu location="bottom end">
+                            <template #activator="{ props: mp }">
+                                <v-btn v-bind="mp" icon="mdi-dots-vertical" variant="text" size="small" />
+                            </template>
+                            <v-list density="compact" min-width="200">
+                                <v-list-item prepend-icon="mdi-eye-outline" title="Ver detalhes"
+                                    @click="emit('view', item)" />
+                                <v-list-item prepend-icon="mdi-content-duplicate" title="Duplicar"
+                                    :disabled="!canManage" @click="emit('duplicate', item)" />
+                                <v-divider class="my-1" />
+                                <v-list-item prepend-icon="mdi-trash-can-outline" title="Excluir" base-color="error"
+                                    :disabled="!canManage" @click="emit('delete', item)" />
+                            </v-list>
+                        </v-menu>
+                    </div>
+                </template>
+
+                <!-- ------- LOADING ------- -->
+                <template #loading>
+                    <v-skeleton-loader type="table-row@5" />
+                </template>
+
+                <!-- ------- EMPTY ------- -->
+                <template #no-data>
+                    <div class="py-8 text-center">
+                        <v-icon size="48" color="grey-lighten-1">mdi-package-variant-closed</v-icon>
+                        <p class="text-body-2 text-medium-emphasis mt-2">
+                            Nenhum produto nesta página.
+                        </p>
+                    </div>
+                </template>
+            </v-data-table-server>
+        </v-card>
+
+        <!-- ============================================================= -->
+        <!--  LISTA MOBILE                                                 -->
+        <!-- ============================================================= -->
+        <div v-else class="mobile-list d-flex flex-column ga-3">
+            <v-skeleton-loader v-if="loading" v-for="i in 3" :key="'sk-' + i" type="list-item-avatar-two-line"
+                class="rounded-xl" />
+
+            <v-card v-for="product in products" v-else :key="product.id" rounded="xl" border flat
+                class="pa-3 mobile-card">
+                <div class="d-flex ga-3">
+                    <v-avatar rounded="lg" size="72" color="grey-lighten-4" class="flex-shrink-0"
+                        @click="emit('view', product)">
+                        <v-img v-if="primaryImage(product)" :src="primaryImage(product)" cover />
+                        <v-icon v-else color="grey">mdi-image-off-outline</v-icon>
+                    </v-avatar>
+
+                    <div class="flex-grow-1 min-width-0">
+                        <div class="d-flex align-start justify-space-between ga-2">
+                            <div class="min-width-0 flex-grow-1">
+                                <div class="font-weight-bold text-truncate d-flex align-center ga-1">
+                                    {{ product.name }}
+                                    <v-icon v-if="product.is_featured" size="14" color="warning">mdi-star</v-icon>
+                                </div>
+                                <code class="sku-chip text-caption">{{ product.sku }}</code>
+                            </div>
+
+                            <v-menu location="bottom end">
+                                <template #activator="{ props: mp }">
+                                    <v-btn v-bind="mp" icon="mdi-dots-vertical" variant="text" size="small"
+                                        density="compact" />
+                                </template>
+                                <v-list density="compact" min-width="200">
+                                    <v-list-item prepend-icon="mdi-pencil-outline" title="Editar" :disabled="!canManage"
+                                        @click="emit('edit', product)" />
+                                    <v-list-item :prepend-icon="product.is_featured ? 'mdi-star-off' : 'mdi-star'"
+                                        :title="product.is_featured ? 'Remover destaque' : 'Destaque'"
+                                        @click="emit('toggleFeatured', product)" />
+                                    <v-list-item prepend-icon="mdi-content-duplicate" title="Duplicar"
+                                        @click="emit('duplicate', product)" />
+                                    <v-divider class="my-1" />
+                                    <v-list-item prepend-icon="mdi-trash-can-outline" title="Excluir" base-color="error"
+                                        :disabled="!canManage" @click="emit('delete', product)" />
+                                </v-list>
+                            </v-menu>
+                        </div>
+
+                        <div class="text-h6 font-weight-black text-primary mt-1">
+                            {{ brl(product.price) }}
+                        </div>
+
+                        <div class="d-flex flex-wrap ga-2 mt-2">
+                            <v-chip size="x-small" variant="tonal" :color="statusMeta[product.status].color"
+                                :prepend-icon="statusMeta[product.status].icon">
+                                {{ statusMeta[product.status].label }}
+                            </v-chip>
+                            <v-chip v-if="product.category_id" size="x-small" variant="tonal" color="primary"
+                                prepend-icon="mdi-tag-outline">
+                                {{ product.category?.name ?? categoryMap.get(product.category_id) ?? '—' }}
+                            </v-chip>
                         </div>
                     </div>
-                </v-card>
-            </div>
-        </v-card>
+                </div>
+
+                <v-divider class="my-3" />
+
+                <div class="d-flex align-center justify-space-between">
+                    <div class="d-flex align-center ga-2">
+                        <v-icon size="18" :color="stockBadge(stockOf(product)).color">
+                            {{ stockBadge(stockOf(product)).icon }}
+                        </v-icon>
+                        <span class="text-caption font-weight-bold text-medium-emphasis">
+                            Estoque:
+                        </span>
+
+                        <div class="stock-stepper d-flex align-center border rounded-pill">
+                            <v-btn icon="mdi-minus" variant="text" size="x-small"
+                                :disabled="!canManage || stockOf(product) <= 0 || stockLoadingId === product.id"
+                                @click="stepStock(product, -1)" />
+                            <span class="px-2 font-weight-bold text-body-2"
+                                :class="`text-${stockBadge(stockOf(product)).color}`"
+                                style="min-width: 32px; text-align: center;">
+                                {{ stockOf(product) }}
+                            </span>
+                            <v-btn icon="mdi-plus" variant="text" size="x-small"
+                                :disabled="!canManage || stockLoadingId === product.id"
+                                @click="stepStock(product, 1)" />
+                        </div>
+                    </div>
+
+                    <v-switch :model-value="product.status === 'ACTIVE'" color="success" density="compact" hide-details
+                        :disabled="!canManage" @change="emit('toggleStatus', product)" />
+                </div>
+            </v-card>
+        </div>
     </div>
 </template>
 
 <style scoped>
-/* Estilo Senior para o input de estoque desktop */
-.quick-stock-input {
-    max-width: 120px;
-    transition: all 0.2s ease;
+.products-table-wrapper {
+    contain: content;
 }
 
-.quick-stock-input :deep(.v-field) {
+/* ---- Table ---- */
+.products-table :deep(thead th) {
+    height: 52px !important;
+    background: rgba(var(--v-theme-surface-variant), 0.3);
+    border-bottom: 2px solid rgba(var(--v-border-color), 0.1) !important;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 700;
+}
+
+.products-table :deep(tbody tr) {
+    transition: background-color 0.15s ease;
+}
+
+.products-table :deep(tbody tr:hover) {
+    background-color: rgba(var(--v-theme-primary), 0.03) !important;
+}
+
+/* ---- Thumb ---- */
+.product-thumb {
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.product-thumb:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+/* ---- SKU chip ---- */
+.sku-chip {
+    background: rgba(var(--v-theme-on-surface), 0.06);
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    font-size: 0.75rem;
+    color: rgb(var(--v-theme-on-surface));
+    font-weight: 600;
+}
+
+/* ---- Stock input desktop ---- */
+.stock-input {
+    max-width: 120px;
+}
+
+.stock-input :deep(.v-field) {
     font-size: 0.875rem;
     font-weight: 700;
     box-shadow: none !important;
+    background: rgba(var(--v-theme-surface-variant), 0.3);
 }
 
-.quick-stock-input :deep(.v-field__input) {
-    padding-inline-start: 8px !important;
+.stock-input :deep(.v-field__input) {
+    padding-inline-start: 4px !important;
     text-align: center;
+    min-height: 36px;
 }
 
-/* Stepper Mobile */
+.products-table :deep(tbody tr:hover) .stock-input :deep(.v-field) {
+    background: rgb(var(--v-theme-surface));
+    border-color: rgb(var(--v-theme-primary));
+}
+
+/* ---- Stock stepper mobile ---- */
 .stock-stepper {
+    background: rgba(var(--v-theme-surface-variant), 0.4);
     height: 32px;
 }
 
@@ -283,40 +511,25 @@ function onStockInputBlur(product: Product, event: any) {
     height: 28px;
 }
 
-.desktop-table :deep(tbody tr:hover) .quick-stock-input :deep(.v-field) {
-    background-color: white;
-    border-color: rgb(var(--v-theme-primary));
+/* ---- Mobile ---- */
+.mobile-card {
+    transition: box-shadow 0.15s ease;
 }
 
-.desktop-table :deep(thead th) {
-    height: 48px !important;
-    border-bottom: 2px solid rgba(var(--v-border-color), 0.05) !important;
+.mobile-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
-.desktop-table :deep(tbody tr) {
-    transition: background-color 0.2s ease;
+.min-width-0 {
+    min-width: 0;
 }
 
-/* Senior detail: Feedback visual de linha selecionável sem ser agressivo */
-.desktop-table :deep(tbody tr:hover) {
-    background-color: rgba(var(--v-theme-primary), 0.02) !important;
+.cursor-pointer {
+    cursor: pointer;
 }
 
-.search-input :deep(.v-field__input) {
-    padding-top: 10px;
-}
-
-/* Estilo para garantir que o switch não desalinhe o texto */
+/* Switch alignment fix */
 :deep(.v-selection-control) {
     min-height: auto !important;
-}
-
-.mobile-list {
-    background-color: rgb(var(--v-theme-surface));
-}
-
-/* Otimização de performance: Rendering layer */
-.product-management-wrapper {
-    contain: content;
 }
 </style>
