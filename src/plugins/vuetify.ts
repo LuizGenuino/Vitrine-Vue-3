@@ -4,8 +4,8 @@ import { createVuetify } from 'vuetify';
 import * as components from 'vuetify/components';
 import * as directives from 'vuetify/directives';
 
-const initialTheme = localStorage.getItem('saas-showcase-ui')
-  ? JSON.parse(localStorage.getItem('saas-showcase-ui') || '{}')?.themeMode || 'light'
+const initialTheme = localStorage.getItem('vibestore-ui')
+  ? JSON.parse(localStorage.getItem('vibestore-ui') || '{}')?.themeMode || 'light'
   : 'light';
 
 export const vuetify = createVuetify({

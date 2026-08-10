@@ -1450,6 +1450,67 @@ export type Database = {
                     },
                 ]
             }
+            team_invites: {
+                Row: {
+                    accepted_at: string | null
+                    accepted_by: string | null
+                    created_at: string
+                    email: string
+                    expires_at: string
+                    id: string
+                    invited_by: string | null
+                    message: string | null
+                    role: Database["public"]["Enums"]["user_role"]
+                    store_id: string
+                }
+                Insert: {
+                    accepted_at?: string | null
+                    accepted_by?: string | null
+                    created_at?: string
+                    email: string
+                    expires_at: string
+                    id?: string
+                    invited_by?: string | null
+                    message?: string | null
+                    role?: Database["public"]["Enums"]["user_role"]
+                    store_id: string
+                }
+                Update: {
+                    accepted_at?: string | null
+                    accepted_by?: string | null
+                    created_at?: string
+                    email?: string
+                    expires_at?: string
+                    id?: string
+                    invited_by?: string | null
+                    message?: string | null
+                    role?: Database["public"]["Enums"]["user_role"]
+                    store_id?: string
+                }
+                Relationships: [
+                    {
+                        foreignKeyName: "team_invites_accepted_by_fkey"
+                        columns: ["accepted_by"]
+                        isOneToOne: false
+                        referencedRelation: "profiles"
+                        referencedColumns: ["id"]
+                    },
+                    {
+                        foreignKeyName: "team_invites_invited_by_fkey"
+                        columns: ["invited_by"]
+                        isOneToOne: false
+                        referencedRelation: "profiles"
+                        referencedColumns: ["id"]
+                    },
+                    {
+                        foreignKeyName: "team_invites_store_id_fkey"
+                        columns: ["store_id"]
+                        isOneToOne: false
+                        referencedRelation: "stores"
+                        referencedColumns: ["id"]
+                    },
+                ]
+            }
         }
         Views: {
             product_stock_balances: {
@@ -1477,8 +1538,20 @@ export type Database = {
             }
         }
         Functions: {
-            anonymize_customer: { Args: { p_customer: string }; Returns: undefined }
-            generate_order_number: { Args: { p_store: string }; Returns: string }
+            anonymize_customer: {
+                Args: {
+                    p_customer: string
+                }
+                Returns: undefined
+            }
+
+            generate_order_number: {
+                Args: {
+                    p_store: string
+                }
+                Returns: string
+            }
+
             has_store_role: {
                 Args: {
                     target_role: Database["public"]["Enums"]["user_role"]
@@ -1486,9 +1559,41 @@ export type Database = {
                 }
                 Returns: boolean
             }
-            is_store_member: { Args: { target_store_id: string }; Returns: boolean }
-            show_limit: { Args: never; Returns: number }
-            show_trgm: { Args: { "": string }; Returns: string[] }
+
+            is_store_member: {
+                Args: {
+                    target_store_id: string
+                }
+                Returns: boolean
+            }
+
+            show_limit: {
+                Args: never
+                Returns: number
+            }
+
+            show_trgm: {
+                Args: {
+                    "": string
+                }
+                Returns: string[]
+            }
+
+            transfer_store_ownership: {
+                Args: {
+                    p_store_id: string | null
+                    p_new_owner_member_id: string | null
+                    p_previous_owner_member_id: string | null
+                }
+                Returns: undefined
+            }
+
+            accept_team_invite: {
+                Args: {
+                    p_invite_id: string
+                }
+                Returns: Json
+            }
         }
         Enums: {
             analytics_event_type:
@@ -1521,7 +1626,7 @@ export type Database = {
             | "PAST_DUE"
             | "CANCELLED"
             | "EXPIRED"
-            user_role: "SUDO" | "OWNER" | "ADMIN" | "MANAGER" | "SELLER" | "EDITOR"
+            user_role: "OWNER" | "ADMIN" | "MANAGER" | "SELLER" | "EDITOR"
         }
         CompositeTypes: {
             [_ in never]: never

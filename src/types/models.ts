@@ -16,6 +16,7 @@ export type Coupon = Tables<'coupons'>
 export type Review = Tables<'reviews'>
 export type InventoryMove = Tables<'inventory_movements'>
 export type AnalyticsEvent = Tables<'analytics_events'>
+export type TeamInvites = Tables<'team_invites'>
 
 // DTOs de escrita
 export type ProductInsert = InsertDto<'products'>

@@ -7,7 +7,12 @@ const router = createRouter({
     history: createWebHistory(),
     routes: [
 
-
+        {
+            path: '/invite/:id',
+            name: 'invite',
+            component: () => import('@/pages/public/InvitePage.vue'),
+            meta: { public: true }, // não passa pelo requireAuth
+        },
         {
             path: '/',
             component: () => import('@/layouts/HomeLayout.vue'),
@@ -84,6 +89,11 @@ const router = createRouter({
                     path: 'cupons',
                     name: 'coupons',
                     component: () => import('@/pages/dashboard/CouponsPage.vue'),
+                },
+                {
+                    path: 'equipe',
+                    name: 'team',
+                    component: () => import('@/pages/dashboard/TeamPage.vue'),
                 },
                 {
                     path: 'planos',
