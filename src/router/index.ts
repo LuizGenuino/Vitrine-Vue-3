@@ -71,6 +71,11 @@ const router = createRouter({
                     component: () => import('@/pages/dashboard/CustomersPage.vue')
                 },
                 {
+                    path: 'graficos',
+                    name: 'analytics',
+                    component: () => import('@/pages/dashboard/AnalyticsPage.vue')
+                },
+                {
                     path: 'configuracoes',
                     name: 'settings',
                     component: () => import('@/pages/dashboard/DashboardSettingsPage.vue'),

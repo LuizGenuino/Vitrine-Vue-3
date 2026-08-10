@@ -85,10 +85,10 @@ const menuSections = computed<MenuSection[]>(() => [
     {
         section: 'INTELIGÊNCIA',
         items: [
-            // {
-            //     title: 'Analytics', icon: 'mdi-chart-line', to: { name: 'analytics' },
-            //     roles: ['OWNER', 'ADMIN', 'MANAGER']
-            // },
+            {
+                title: 'Graficos', icon: 'mdi-chart-line', to: { name: 'analytics' },
+                roles: ['OWNER', 'ADMIN', 'MANAGER']
+            },
         ],
     },
     {
