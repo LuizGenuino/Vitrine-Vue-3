@@ -23,7 +23,7 @@ const notify = useNotifications()
 const { currentStore, currentStoreId, currentRole } = storeToRefs(auth)
 
 const canEdit = computed(() =>
-    currentRole.value && ['SUDO', 'OWNER', 'ADMIN'].includes(currentRole.value),
+    currentRole.value && [ 'OWNER', 'ADMIN'].includes(currentRole.value),
 )
 
 const isOwner = computed(() => currentRole.value === 'OWNER')
@@ -411,7 +411,7 @@ const providers: IntegrationProvider[] = [
         key: 'meta_pixel',
         name: 'Meta Pixel',
         description: 'Rastreie conversões para anúncios do Facebook/Instagram',
-        icon: 'mdi-meta',
+        icon: 'mdi-power-plug',
         color: 'primary',
         category: 'analytics',
         fields: [
@@ -746,13 +746,14 @@ onMounted(() => {
                                 <div class="text-overline mb-2">Vitrine pública</div>
                                 <div v-if="publicUrl" class="d-flex flex-column ga-2">
                                     <code class="public-url">{{ publicUrl }}</code>
-                                    <div class="d-flex ga-2">
+                                    <div class="d-flex ga-2 justify-space-between">
                                         <v-btn size="small" variant="tonal" class="text-none"
-                                            prepend-icon="mdi-content-copy" block @click="copyPublicUrl">
+                                            prepend-icon="mdi-content-copy" @click="copyPublicUrl">
                                             Copiar
                                         </v-btn>
+                                        <p>- ou -</p>
                                         <v-btn size="small" variant="tonal" class="text-none"
-                                            prepend-icon="mdi-open-in-new" :href="publicUrl" target="_blank" block>
+                                            prepend-icon="mdi-open-in-new" :href="publicUrl" target="_blank">
                                             Abrir
                                         </v-btn>
                                     </div>
@@ -870,7 +871,16 @@ onMounted(() => {
                                 <v-col cols="12" md="4">
                                     <v-text-field v-model="form.settings.social.tiktok" label="TikTok"
                                         variant="outlined" density="comfortable" prefix="@" placeholder="minhaloja"
-                                        :readonly="!canEdit" />
+                                        :readonly="!canEdit" prepend-inner-icon="mdi-tik-tok">
+                                        <template #prepend-inner>
+                                            <svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" width="24"
+                                                height="24" viewBox="0 0 24 24">
+                                                <path
+                                                    d="M 6 3 C 4.3550302 3 3 4.3550302 3 6 L 3 18 C 3 19.64497 4.3550302 21 6 21 L 18 21 C 19.64497 21 21 19.64497 21 18 L 21 6 C 21 4.3550302 19.64497 3 18 3 L 6 3 z M 12 7 L 14 7 C 14 8.005 15.471 9 16 9 L 16 11 C 15.395 11 14.668 10.734156 14 10.285156 L 14 14 C 14 15.654 12.654 17 11 17 C 9.346 17 8 15.654 8 14 C 8 12.346 9.346 11 11 11 L 11 13 C 10.448 13 10 13.449 10 14 C 10 14.551 10.448 15 11 15 C 11.552 15 12 14.551 12 14 L 12 7 z">
+                                                </path>
+                                            </svg>
+                                        </template>
+                                    </v-text-field>
                                 </v-col>
                             </v-row>
                         </v-col>
