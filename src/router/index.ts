@@ -44,11 +44,11 @@ const router = createRouter({
             beforeEnter: requireAuth,
             meta: { requiresAuth: true },
             children: [
-                { path: '', name: 'overview', component: () => import('@/pages/dashboard/DashboardOverviewPage.vue') },
+                { path: '', name: 'overview', component: () => import('@/pages/dashboard/OverviewPage.vue') },
                 {
-                    path: 'configuracoes',
-                    name: 'settings',
-                    component: () => import('@/pages/dashboard/DashboardSettingsPage.vue'),
+                    path: 'produtos',
+                    name: 'products',
+                    component: () => import('@/pages/dashboard/ProductsPage.vue'),
                 },
                 {
                     path: 'categorias',
@@ -56,9 +56,24 @@ const router = createRouter({
                     component: () => import('@/pages/dashboard/CategoriesPage.vue'),
                 },
                 {
-                    path: 'produtos',
-                    name: 'products',
-                    component: () => import('@/pages/dashboard/ProductsPage.vue'),
+                    path: 'estoque',
+                    name: 'inventory',
+                    component: () => import('@/pages/dashboard/InventoryPage.vue')
+                },
+                {
+                    path: 'pedidos',
+                    name: 'orders',
+                    component: () => import('@/pages/dashboard/OrdersPage.vue')
+                },
+                {
+                    path: 'clientes',
+                    name: 'customers',
+                    component: () => import('@/pages/dashboard/CustomersPage.vue')
+                },
+                {
+                    path: 'configuracoes',
+                    name: 'settings',
+                    component: () => import('@/pages/dashboard/DashboardSettingsPage.vue'),
                 },
                 {
                     path: 'planos',

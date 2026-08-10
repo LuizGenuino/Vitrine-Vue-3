@@ -71,14 +71,14 @@ const menuSections = computed<MenuSection[]>(() => [
             { title: 'Visão geral', icon: 'mdi-view-dashboard-outline', to: { name: 'overview' } },
             { title: 'Produtos', icon: 'mdi-package-variant-closed', to: { name: 'products' } },
             { title: 'Categorias', icon: 'mdi-tag-outline', to: { name: 'categories' } },
-            // { title: 'Estoque', icon: 'mdi-warehouse', to: { name: 'inventory' } },
+            { title: 'Estoque', icon: 'mdi-warehouse', to: { name: 'inventory' } },
         ],
     },
     {
         section: 'VENDAS',
         items: [
-            // { title: 'Pedidos', icon: 'mdi-cart-outline', to: { name: 'orders' } },
-            // { title: 'Clientes', icon: 'mdi-account-group-outline', to: { name: 'customers' } },
+            { title: 'Pedidos', icon: 'mdi-cart-outline', to: { name: 'orders' } },
+            { title: 'Clientes', icon: 'mdi-account-group-outline', to: { name: 'customers' } },
             // { title: 'Cupons', icon: 'mdi-ticket-percent-outline', to: { name: 'coupons' } },
         ],
     },
