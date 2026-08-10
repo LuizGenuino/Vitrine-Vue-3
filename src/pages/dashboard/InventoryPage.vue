@@ -27,7 +27,7 @@ const { currentStoreId, currentRole } = storeToRefs(auth)
 const LOW_STOCK_THRESHOLD = 5
 
 const canManage = computed(() =>
-    currentRole.value && ['SUDO', 'OWNER', 'ADMIN', 'MANAGER'].includes(currentRole.value),
+    currentRole.value && ['OWNER', 'ADMIN', 'MANAGER'].includes(currentRole.value),
 )
 
 /* -------------------------------------------------------------------------- */

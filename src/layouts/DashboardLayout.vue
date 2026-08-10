@@ -98,10 +98,10 @@ const menuSections = computed<MenuSection[]>(() => [
                 title: 'Minha loja', icon: 'mdi-store-cog-outline', to: { name: 'settings' },
                 roles: ['OWNER', 'ADMIN'],
             },
-            // {
-            //     title: 'Equipe', icon: 'mdi-account-multiple-outline', to: { name: 'team' },
-            //     roles: ['OWNER', 'ADMIN']
-            // },
+            {
+                title: 'Equipe', icon: 'mdi-account-multiple-outline', to: { name: 'team' },
+                roles: ['OWNER', 'ADMIN']
+            },
             // {
             //     title: 'Integrações', icon: 'mdi-connection', to: { name: 'integrations' },
             //     roles: [ 'OWNER', 'ADMIN'],
