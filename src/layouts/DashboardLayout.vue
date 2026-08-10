@@ -79,7 +79,7 @@ const menuSections = computed<MenuSection[]>(() => [
         items: [
             { title: 'Pedidos', icon: 'mdi-cart-outline', to: { name: 'orders' } },
             { title: 'Clientes', icon: 'mdi-account-group-outline', to: { name: 'customers' } },
-            // { title: 'Cupons', icon: 'mdi-ticket-percent-outline', to: { name: 'coupons' } },
+            { title: 'Cupons', icon: 'mdi-ticket-percent-outline', to: { name: 'coupons' } },
         ],
     },
     {
@@ -87,7 +87,7 @@ const menuSections = computed<MenuSection[]>(() => [
         items: [
             {
                 title: 'Graficos', icon: 'mdi-chart-line', to: { name: 'analytics' },
-                roles: ['SUDO','OWNER', 'ADMIN', 'MANAGER']
+                roles: ['OWNER', 'ADMIN', 'MANAGER']
             },
         ],
     },
@@ -96,20 +96,20 @@ const menuSections = computed<MenuSection[]>(() => [
         items: [
             {
                 title: 'Minha loja', icon: 'mdi-store-cog-outline', to: { name: 'settings' },
-                roles: ['SUDO', 'OWNER', 'ADMIN'],
+                roles: ['OWNER', 'ADMIN'],
             },
             // {
             //     title: 'Equipe', icon: 'mdi-account-multiple-outline', to: { name: 'team' },
             //     roles: ['OWNER', 'ADMIN']
             // },
-            {
-                title: 'Integrações', icon: 'mdi-connection', to: { name: 'integrations' },
-                roles: ['SUDO', 'OWNER', 'ADMIN'],
-            },
-            {
-                title: 'Assinatura', icon: 'mdi-credit-card-outline', to: { name: 'plans' },
-                roles: ['SUDO', 'OWNER']
-            },
+            // {
+            //     title: 'Integrações', icon: 'mdi-connection', to: { name: 'integrations' },
+            //     roles: [ 'OWNER', 'ADMIN'],
+            // },
+            // {
+            //     title: 'Assinatura', icon: 'mdi-credit-card-outline', to: { name: 'plans' },
+            //     roles: [ 'OWNER']
+            // },
         ],
     },
 ])
@@ -216,7 +216,6 @@ const initials = computed(() => {
 })
 
 const roleLabel: Record<string, string> = {
-    SUDO: 'Desenvolvedor(a)',
     OWNER: 'Proprietário(a)',
     ADMIN: 'Administrador(a)',
     MANAGER: 'Gerente',

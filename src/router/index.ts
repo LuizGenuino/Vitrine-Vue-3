@@ -78,7 +78,12 @@ const router = createRouter({
                 {
                     path: 'configuracoes',
                     name: 'settings',
-                    component: () => import('@/pages/dashboard/DashboardSettingsPage.vue'),
+                    component: () => import('@/pages/dashboard/SettingsPage.vue'),
+                },
+                {
+                    path: 'cupons',
+                    name: 'coupons',
+                    component: () => import('@/pages/dashboard/CouponsPage.vue'),
                 },
                 {
                     path: 'planos',
