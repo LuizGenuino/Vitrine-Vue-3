@@ -1521,7 +1521,7 @@ export type Database = {
             | "PAST_DUE"
             | "CANCELLED"
             | "EXPIRED"
-            user_role: "OWNER" | "ADMIN" | "MANAGER" | "SELLER" | "EDITOR"
+            user_role: "SUDO" | "OWNER" | "ADMIN" | "MANAGER" | "SELLER" | "EDITOR"
         }
         CompositeTypes: {
             [_ in never]: never

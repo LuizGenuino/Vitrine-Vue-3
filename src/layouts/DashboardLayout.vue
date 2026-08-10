@@ -87,7 +87,7 @@ const menuSections = computed<MenuSection[]>(() => [
         items: [
             {
                 title: 'Graficos', icon: 'mdi-chart-line', to: { name: 'analytics' },
-                roles: ['OWNER', 'ADMIN', 'MANAGER']
+                roles: ['SUDO','OWNER', 'ADMIN', 'MANAGER']
             },
         ],
     },
@@ -96,7 +96,7 @@ const menuSections = computed<MenuSection[]>(() => [
         items: [
             {
                 title: 'Minha loja', icon: 'mdi-store-cog-outline', to: { name: 'settings' },
-                roles: ['OWNER', 'ADMIN']
+                roles: ['SUDO', 'OWNER', 'ADMIN'],
             },
             // {
             //     title: 'Equipe', icon: 'mdi-account-multiple-outline', to: { name: 'team' },
@@ -104,11 +104,11 @@ const menuSections = computed<MenuSection[]>(() => [
             // },
             {
                 title: 'Integrações', icon: 'mdi-connection', to: { name: 'integrations' },
-                roles: ['OWNER', 'ADMIN']
+                roles: ['SUDO', 'OWNER', 'ADMIN'],
             },
             {
                 title: 'Assinatura', icon: 'mdi-credit-card-outline', to: { name: 'plans' },
-                roles: ['OWNER']
+                roles: ['SUDO', 'OWNER']
             },
         ],
     },
@@ -216,6 +216,7 @@ const initials = computed(() => {
 })
 
 const roleLabel: Record<string, string> = {
+    SUDO: 'Desenvolvedor(a)',
     OWNER: 'Proprietário(a)',
     ADMIN: 'Administrador(a)',
     MANAGER: 'Gerente',

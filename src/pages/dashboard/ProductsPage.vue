@@ -509,7 +509,7 @@ watch(searchInput, (val) => {
 /* -------------------------------------------------------------------------- */
 
 const canManage = computed(() =>
-    currentRole.value && ['OWNER', 'ADMIN', 'MANAGER', 'SELLER', 'EDITOR'].includes(currentRole.value),
+    currentRole.value && ['SUDO','OWNER', 'ADMIN', 'MANAGER', 'SELLER', 'EDITOR'].includes(currentRole.value),
 )
 
 // Em ProductsPage.vue

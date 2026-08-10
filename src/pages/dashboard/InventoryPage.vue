@@ -27,7 +27,7 @@ const { currentStoreId, currentRole } = storeToRefs(auth)
 const LOW_STOCK_THRESHOLD = 5
 
 const canManage = computed(() =>
-    currentRole.value && ['OWNER', 'ADMIN', 'MANAGER'].includes(currentRole.value),
+    currentRole.value && ['SUDO', 'OWNER', 'ADMIN', 'MANAGER'].includes(currentRole.value),
 )
 
 /* -------------------------------------------------------------------------- */
@@ -574,10 +574,10 @@ onMounted(() => {
 
                         <template #item.status="{ item }">
                             <v-chip size="x-small" :color="item.status === 'out_of_stock' ? 'error' :
-                                    item.status === 'low_stock' ? 'warning' : 'success'
+                                item.status === 'low_stock' ? 'warning' : 'success'
                                 " variant="tonal" :prepend-icon="item.status === 'out_of_stock' ? 'mdi-close-octagon' :
-                        item.status === 'low_stock' ? 'mdi-alert' : 'mdi-check-circle'
-                    ">
+                                    item.status === 'low_stock' ? 'mdi-alert' : 'mdi-check-circle'
+                                    ">
                                 {{
                                     item.status === 'out_of_stock' ? 'Esgotado' :
                                         item.status === 'low_stock' ? 'Baixo' : 'Em estoque'
@@ -801,7 +801,7 @@ onMounted(() => {
                                         {{ (stockMap[movementDialog.productId] ?? 0) +
                                             (movementMeta[movementDialog.type].positive
                                                 ? Math.abs(movementDialog.quantity)
-                                        : -Math.abs(movementDialog.quantity)) }} un
+                                                : -Math.abs(movementDialog.quantity)) }} un
                                     </strong>
                                 </div>
                             </v-alert>

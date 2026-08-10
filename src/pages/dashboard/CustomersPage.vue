@@ -27,7 +27,7 @@ const notify = useNotifications()
 const { currentStoreId, currentRole } = storeToRefs(auth)
 
 const canManage = computed(() =>
-    currentRole.value && ['OWNER', 'ADMIN', 'MANAGER'].includes(currentRole.value),
+    currentRole.value && ['SUDO', 'OWNER', 'ADMIN', 'MANAGER'].includes(currentRole.value),
 )
 
 /* -------------------------------------------------------------------------- */
