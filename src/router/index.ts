@@ -20,19 +20,55 @@ const router = createRouter({
                 { path: '', name: 'landing', component: () => import('@/pages/public/LandingPage.vue') },
             ],
         },
+        // src/router/index.ts
         {
             path: '/s/:storeSlug',
             component: () => import('@/layouts/StoreLayout.vue'),
+            meta: { public: true }, // 🔥 Toda a árvore pública
             children: [
-                { path: '', name: 'storefront', component: () => import('@/pages/public/StorefrontPage.vue') },
                 {
-                    path: '/:storeSlug/produto/:productSlug',
-                    name: 'product',
+                    path: '',                        // → /s/:storeSlug
+                    name: 'storefront',
+                    component: () => import('@/pages/public/StorefrontPage.vue'),
+                },
+                {
+                    path: 'produto/:productSlug',    // → /s/:storeSlug/produto/:productSlug
+                    name: 'storefront-product',
                     component: () => import('@/pages/public/ProductPage.vue'),
                 },
-                { path: '/:storeSlug/carrinho', name: 'cart', component: () => import('@/pages/public/CartPage.vue') },
+                {
+                    path: 'categoria/:categorySlug', // → /s/:storeSlug/categoria/:categorySlug
+                    name: 'storefront-category',
+                    component: () => import('@/pages/public/CategoryPage.vue'),
+                },
+                {
+                    path: 'carrinho',                // → /s/:storeSlug/carrinho
+                    name: 'storefront-cart',
+                    component: () => import('@/pages/public/CartPage.vue'),
+                },
+                {
+                    path: 'checkout',                // → /s/:storeSlug/checkout
+                    name: 'storefront-checkout',
+                    component: () => import('@/pages/public/CheckoutPage.vue'),
+                },
+                {
+                    path: 'pedido/:orderNumber',     // → /s/:storeSlug/pedido/:orderNumber
+                    name: 'storefront-order-status',
+                    component: () => import('@/pages/public/OrderStatusPage.vue'),
+                },
+                {
+                    path: 'busca',                   // → /s/:storeSlug/busca?q=...
+                    name: 'storefront-search',
+                    component: () => import('@/pages/public/SearchPage.vue'),
+                },
+                {
+                    path: ':pathMatch(.*)*',         // 404 dentro da vitrine
+                    name: 'storefront-not-found',
+                    component: () => import('@/pages/public/StorefrontNotFound.vue'),
+                },
             ],
         },
+
         {
             path: '/auth',
             component: () => import('@/layouts/AuthLayout.vue'),
@@ -148,6 +184,9 @@ const router = createRouter({
         },
     ],
 });
+
+
+router.beforeEach(requireAuth)
 
 router.beforeEach(async (to) => {
     const authStore = useAuthStore();

@@ -2,6 +2,10 @@ import type { NavigationGuard } from 'vue-router'
 import { useAuthStore } from '@/stores/auth.store'
 
 export const requireAuth: NavigationGuard = async (to) => {
+    if (to.matched.some(record => record.meta.public)) {
+        return true
+    }
+
     const auth = useAuthStore()
     if (auth.loading) await auth.init()
 
