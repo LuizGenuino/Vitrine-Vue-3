@@ -1545,6 +1545,22 @@ export type Database = {
                 Returns: undefined
             }
 
+            get_public_order: {
+                Args: {
+                    p_order_number: string
+                    p_token: string
+                }
+                Returns: Json | null
+            }
+            increment_coupon_use: {
+                Args: {
+                    p_coupon_code: string
+                    p_order_id: string
+                    p_customer_id: string
+                    p_order_total: number
+                }
+                Returns: any | null
+            }
             generate_order_number: {
                 Args: {
                     p_store: string

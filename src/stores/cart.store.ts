@@ -10,6 +10,7 @@ export interface CartItem {
     price: number
     quantity: number
     image_url: string | null
+    slug?: string
 }
 
 export const useCartStore = defineStore('cart', () => {
