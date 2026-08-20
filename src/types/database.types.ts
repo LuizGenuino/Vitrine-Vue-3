@@ -1,10 +1,4 @@
-export type Json =
-    | string
-    | number
-    | boolean
-    | null
-    | { [key: string]: Json | undefined }
-    | Json[]
+
 
 export type Database = {
     // Allows to automatically instantiate createClient with right options
@@ -22,12 +16,12 @@ export type Database = {
         Functions: {
             graphql: {
                 Args: {
-                    extensions?: Json
+                    extensions?: any
                     operationName?: string
                     query?: string
-                    variables?: Json
+                    variables?: any
                 }
-                Returns: Json
+                Returns: any
             }
         }
         Enums: {
@@ -46,7 +40,7 @@ export type Database = {
                     event_type: Database["public"]["Enums"]["analytics_event_type"]
                     id: string
                     ip_address: unknown
-                    metadata: Json
+                    metadata: any
                     product_id: string | null
                     session_id: string | null
                     store_id: string
@@ -58,7 +52,7 @@ export type Database = {
                     event_type: Database["public"]["Enums"]["analytics_event_type"]
                     id?: string
                     ip_address?: unknown
-                    metadata?: Json
+                    metadata?: any
                     product_id?: string | null
                     session_id?: string | null
                     store_id: string
@@ -70,7 +64,7 @@ export type Database = {
                     event_type?: Database["public"]["Enums"]["analytics_event_type"]
                     id?: string
                     ip_address?: unknown
-                    metadata?: Json
+                    metadata?: any
                     product_id?: string | null
                     session_id?: string | null
                     store_id?: string
@@ -106,8 +100,8 @@ export type Database = {
                     created_at: string
                     id: string
                     ip_address: unknown
-                    new_values: Json | null
-                    old_values: Json | null
+                    new_values: any | null
+                    old_values: any | null
                     record_id: string
                     store_id: string | null
                     table_name: string
@@ -118,8 +112,8 @@ export type Database = {
                     created_at?: string
                     id?: string
                     ip_address?: unknown
-                    new_values?: Json | null
-                    old_values?: Json | null
+                    new_values?: any | null
+                    old_values?: any | null
                     record_id: string
                     store_id?: string | null
                     table_name: string
@@ -130,8 +124,8 @@ export type Database = {
                     created_at?: string
                     id?: string
                     ip_address?: unknown
-                    new_values?: Json | null
-                    old_values?: Json | null
+                    new_values?: any | null
+                    old_values?: any | null
                     record_id?: string
                     store_id?: string | null
                     table_name?: string
@@ -483,7 +477,7 @@ export type Database = {
             }
             integrations: {
                 Row: {
-                    config: Json
+                    config: any
                     created_at: string
                     created_by: string | null
                     credentials: string | null
@@ -496,7 +490,7 @@ export type Database = {
                     updated_by: string | null
                 }
                 Insert: {
-                    config?: Json
+                    config?: any
                     created_at?: string
                     created_by?: string | null
                     credentials?: string | null
@@ -509,7 +503,7 @@ export type Database = {
                     updated_by?: string | null
                 }
                 Update: {
-                    config?: Json
+                    config?: any
                     created_at?: string
                     created_by?: string | null
                     credentials?: string | null
@@ -663,7 +657,7 @@ export type Database = {
                     id: string
                     order_id: string
                     paid_at: string | null
-                    raw_response: Json | null
+                    raw_response: any | null
                     status: Database["public"]["Enums"]["payment_status"]
                     updated_at: string
                 }
@@ -675,7 +669,7 @@ export type Database = {
                     id?: string
                     order_id: string
                     paid_at?: string | null
-                    raw_response?: Json | null
+                    raw_response?: any | null
                     status?: Database["public"]["Enums"]["payment_status"]
                     updated_at?: string
                 }
@@ -687,7 +681,7 @@ export type Database = {
                     id?: string
                     order_id?: string
                     paid_at?: string | null
-                    raw_response?: Json | null
+                    raw_response?: any | null
                     status?: Database["public"]["Enums"]["payment_status"]
                     updated_at?: string
                 }
@@ -862,7 +856,7 @@ export type Database = {
             plans: {
                 Row: {
                     created_at: string
-                    features: Json
+                    features: any
                     id: string
                     is_active: boolean
                     max_products: number
@@ -876,7 +870,7 @@ export type Database = {
                 }
                 Insert: {
                     created_at?: string
-                    features?: Json
+                    features?: any
                     id?: string
                     is_active?: boolean
                     max_products?: number
@@ -890,7 +884,7 @@ export type Database = {
                 }
                 Update: {
                     created_at?: string
-                    features?: Json
+                    features?: any
                     id?: string
                     is_active?: boolean
                     max_products?: number
@@ -1077,7 +1071,7 @@ export type Database = {
                     full_name: string
                     id: string
                     phone: string | null
-                    preferences: Json
+                    preferences: any
                     updated_at: string
                 }
                 Insert: {
@@ -1087,7 +1081,7 @@ export type Database = {
                     full_name: string
                     id: string
                     phone?: string | null
-                    preferences?: Json
+                    preferences?: any
                     updated_at?: string
                 }
                 Update: {
@@ -1097,7 +1091,7 @@ export type Database = {
                     full_name?: string
                     id?: string
                     phone?: string | null
-                    preferences?: Json
+                    preferences?: any
                     updated_at?: string
                 }
                 Relationships: []
@@ -1236,7 +1230,7 @@ export type Database = {
             }
             stores: {
                 Row: {
-                    address: Json
+                    address: any
                     banner_url: string | null
                     cnpj: string | null
                     created_at: string
@@ -1248,13 +1242,13 @@ export type Database = {
                     logo_url: string | null
                     name: string
                     phone: string | null
-                    settings: Json
+                    settings: any
                     slug: string
                     updated_at: string
                     updated_by: string | null
                 }
                 Insert: {
-                    address?: Json
+                    address?: any
                     banner_url?: string | null
                     cnpj?: string | null
                     created_at?: string
@@ -1266,13 +1260,13 @@ export type Database = {
                     logo_url?: string | null
                     name: string
                     phone?: string | null
-                    settings?: Json
+                    settings?: any
                     slug: string
                     updated_at?: string
                     updated_by?: string | null
                 }
                 Update: {
-                    address?: Json
+                    address?: any
                     banner_url?: string | null
                     cnpj?: string | null
                     created_at?: string
@@ -1284,7 +1278,7 @@ export type Database = {
                     logo_url?: string | null
                     name?: string
                     phone?: string | null
-                    settings?: Json
+                    settings?: any
                     slug?: string
                     updated_at?: string
                     updated_by?: string | null
@@ -1550,7 +1544,7 @@ export type Database = {
                     p_order_number: string
                     p_token: string
                 }
-                Returns: Json | null
+                Returns: any | null
             }
             increment_coupon_use: {
                 Args: {
@@ -1608,7 +1602,7 @@ export type Database = {
                 Args: {
                     p_invite_id: string
                 }
-                Returns: Json
+                Returns: any
             }
         }
         Enums: {

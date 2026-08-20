@@ -2,7 +2,7 @@
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import { supabase } from '@/lib/supabase'
-import type { Store, Product, Category } from '@/types/models'
+import type { Store, Category } from '@/types/models'
 
 export const useStorefrontStore = defineStore('storefront', () => {
     const store = ref<Store | null>(null)
@@ -14,7 +14,7 @@ export const useStorefrontStore = defineStore('storefront', () => {
     /** Carrega a loja pelo slug — cachea resultado */
     async function loadBySlug(slug: string): Promise<Store | null> {
         // Já é a mesma loja carregada? Reaproveita
-        if (currentSlug.value === slug && store.value) return store.value as Store
+        if (currentSlug.value === slug && store.value) return store.value
 
         loading.value = true
         notFound.value = false
@@ -36,8 +36,7 @@ export const useStorefrontStore = defineStore('storefront', () => {
                 return null
             }
 
-            store.value = data as Store
-
+            store.value = data 
             // Carrega categorias em paralelo
             const { data: cats } = await supabase
                 .from('categories')
@@ -48,8 +47,9 @@ export const useStorefrontStore = defineStore('storefront', () => {
                 .order('sort_order')
 
             categories.value = (cats ?? []) as Category[]
-            
-            return store.value as any
+
+            const currentStore = store.value || null
+            return currentStore 
         } finally {
             loading.value = false
         }
@@ -61,9 +61,10 @@ export const useStorefrontStore = defineStore('storefront', () => {
         productId?: string
         metadata?: Record<string, any>
     }) {
-        if (!store.value) return
+        const currentStore = store.value
+        if (!currentStore) return
         void supabase.from('analytics_events').insert({
-            store_id: store.value.id,
+            store_id: currentStore.id,
             event_type: input.eventType,
             product_id: input.productId,
             metadata: input.metadata ?? {},
@@ -72,7 +73,7 @@ export const useStorefrontStore = defineStore('storefront', () => {
         })
     }
 
-    const themeColor = computed(() =>
+    const themeColor = computed<string>(() =>
         (store.value as any)?.settings?.theme_color ?? '#6366f1',
     )
 
