@@ -109,6 +109,6 @@ export const useAuthStore = defineStore('auth', () => {
     return {
         session, user, profile, stores, currentStoreId,
         isAuthenticated, currentStore, currentRole, loading,
-        init, signIn, signUp, signOut, resetPassword, switchStore, updatePassword, loadStores
+        init, signIn, signUp, signOut, resetPassword, switchStore, updatePassword, loadStores, loadProfile
     }
 })

@@ -100,6 +100,12 @@ const router = createRouter({
                     name: 'plans',
                     component: () => import('@/pages/dashboard/SubscriptionPlansPage.vue'),
                 },
+                {
+                    path: '/onboarding',
+                    name: 'onboarding',
+                    component: () => import('@/pages/dashboard/OnboardingPage.vue'),
+                    meta: { requiresAuth: true, hideLayout: true },
+                },
                 //sudo area
                 // {
                 //     path: 'admin',

@@ -1,4 +1,3 @@
-import type { UserRole } from './types-shared.ts'
 
 interface BuildEmailInput {
     inviteUrl: string
