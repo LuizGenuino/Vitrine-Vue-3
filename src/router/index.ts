@@ -36,11 +36,11 @@ const router = createRouter({
                     name: 'storefront-product',
                     component: () => import('@/pages/public/ProductPage.vue'),
                 },
-                {
-                    path: 'categoria/:categorySlug', // → /s/:storeSlug/categoria/:categorySlug
-                    name: 'storefront-category',
-                    component: () => import('@/pages/public/CategoryPage.vue'),
-                },
+                // {
+                //     path: 'categoria/:categorySlug', // → /s/:storeSlug/categoria/:categorySlug
+                //     name: 'storefront-category',
+                //     component: () => import('@/pages/public/CategoryPage.vue'),
+                // },
                 {
                     path: 'carrinho',                // → /s/:storeSlug/carrinho
                     name: 'storefront-cart',
@@ -188,30 +188,30 @@ const router = createRouter({
 
 router.beforeEach(requireAuth)
 
-router.beforeEach(async (to) => {
-    const authStore = useAuthStore();
-    authStore.init();
+// router.beforeEach(async (to) => {
+//     const authStore = useAuthStore();
+//     authStore.init();
 
-    if (authStore.loading) {
-        await new Promise<void>((resolve) => {
-            const stop = setInterval(() => {
-                if (!authStore.loading) {
-                    clearInterval(stop);
-                    resolve();
-                }
-            }, 50);
-        });
-    }
+//     if (authStore.loading) {
+//         await new Promise<void>((resolve) => {
+//             const stop = setInterval(() => {
+//                 if (!authStore.loading) {
+//                     clearInterval(stop);
+//                     resolve();
+//                 }
+//             }, 50);
+//         });
+//     }
 
-    if (to.meta.requiresAuth && !authStore.isAuthenticated) {
-        return { name: 'login' };
-    }
+//     if (to.meta.requiresAuth && !authStore.isAuthenticated) {
+//         return { name: 'login' };
+//     }
 
-    if ((to.name === 'login' || to.name === 'register') && authStore.isAuthenticated) {
-        return { name: 'overview' };
-    }
+//     if ((to.name === 'login' || to.name === 'register') && authStore.isAuthenticated) {
+//         return { name: 'overview' };
+//     }
 
-    return true;
-});
+//     return true;
+// });
 
 export default router;

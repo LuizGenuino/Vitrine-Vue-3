@@ -49,7 +49,7 @@ export const useStorefrontStore = defineStore('storefront', () => {
 
             categories.value = (cats ?? []) as Category[]
             
-            return store.value as Store
+            return store.value as any
         } finally {
             loading.value = false
         }

@@ -1,5 +1,4 @@
 import { ref } from 'vue';
-import { storageService } from '@/services/storageService';
 import heic2any from 'heic2any';
 
 function isHEIC(file: File): boolean {
@@ -62,18 +61,22 @@ export const useImageUpload = () => {
     async function uploadMany(ownerId: string, folder: string, files: File[], availableNames?: string[]): Promise<string[]> {
         uploading.value = true;
         try {
-            const uploads = files.map(async (file, index) => {
-                const fileFormat = await convertToWebP(file, index, availableNames?.[index] || null);
-                return storageService.uploadFile(`${ownerId}/${folder}/${fileFormat.name}`, fileFormat);
-            });
-            return await Promise.all(uploads);
+            // const uploads = files.map(async (file, index) => {
+            //     const fileFormat = await convertToWebP(file, index, availableNames?.[index] || null);
+            //     // return storageService.uploadFile(`${ownerId}/${folder}/${fileFormat.name}`, fileFormat);
+            //     return storageService.uploadFile(`${ownerId}/${folder}/${fileFormat.name}`, fileFormat);
+
+            // });
+            // return await Promise.all(uploads);
+            return Promise.reject()
         } finally {
             uploading.value = false;
         }
     }
 
     async function deleteFile(ownerId: string, folder: string, code: string, names: string[]) {
-        const deletePromises = names.map(name => storageService.deleteFile(`${ownerId}/${folder}/${code}/${name}`));
+        // const deletePromises = names.map(name => storageService.deleteFile(`${ownerId}/${folder}/${code}/${name}`));
+        const deletePromises = names.map(name => {});
         await Promise.all(deletePromises);
     }
 
