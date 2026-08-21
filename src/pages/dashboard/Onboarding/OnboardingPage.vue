@@ -372,7 +372,7 @@ function prevStep() {
 
 function skipOnboarding() {
     clearDraft()
-    router.push({ name: 'dashboard-overview' })
+    router.push({ name: 'overview' })
 }
 
 /* -------------------------------------------------------------------------- */
@@ -471,7 +471,7 @@ async function finalizeAndGo() {
     if (store) {
         // Pequeno delay para o usuário ver a animação de sucesso
         setTimeout(() => {
-            router.push({ name: 'dashboard-overview' })
+            router.push({ name: 'overview' })
         }, 1500)
     }
 }
@@ -487,7 +487,7 @@ const hasExistingStore = computed(() =>
 onMounted(() => {
     // Se já tem loja e não veio com ?new=true, redireciona
     if (hasExistingStore.value) {
-        router.replace({ name: 'dashboard-overview' })
+        router.replace({ name: 'overview' })
         return
     }
 

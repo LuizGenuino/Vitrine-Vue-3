@@ -201,7 +201,7 @@ const { execute: acceptInvite, loading: accepting } = useAsyncAction(
 )
 
 function goToDashboard() {
-    router.push({ name: 'dashboard-overview' })
+    router.push({ name: 'overview' })
 }
 
 /* -------------------------------------------------------------------------- */
@@ -564,7 +564,7 @@ onMounted(() => {
                             Aceitar convite e entrar
                         </v-btn>
                         <v-btn variant="text" class="text-none" :disabled="accepting"
-                            @click="router.push({ name: 'dashboard-overview' })">
+                            @click="router.push({ name: 'overview' })">
                             Decidir mais tarde
                         </v-btn>
                     </div>
