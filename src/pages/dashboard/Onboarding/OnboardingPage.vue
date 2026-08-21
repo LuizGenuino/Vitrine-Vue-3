@@ -9,7 +9,10 @@ import { useAsyncAction } from '@/composables/useAsyncAction'
 import { storesService } from '@/services/stores.service'
 import { storageService } from '@/services/storage.service'
 import { supabase } from '@/lib/supabase'
+import { useDisplay } from 'vuetify'
 
+
+const { smAndDown } = useDisplay()
 /* -------------------------------------------------------------------------- */
 /*  Setup                                                                     */
 /* -------------------------------------------------------------------------- */
@@ -535,6 +538,33 @@ const firstName = computed(() =>
         </header>
 
         <!-- ==================== CONTENT ==================== -->
+        <footer class="d-sm-none onboarding-footer">
+            <div class="footer-content">
+                <v-btn v-if="!isFirstStep && creationStep === 'idle'" variant="text" prepend-icon="mdi-arrow-left"
+                    class="text-none" :disabled="creating" @click="prevStep">
+                    Voltar
+                </v-btn>
+                <div v-else />
+
+                <div class="step-dots">
+                    <div v-for="(step, i) in steps" :key="step.key" class="step-dot" :class="{
+                        active: i === currentStepIndex,
+                        completed: i < currentStepIndex,
+                    }" @click="i < currentStepIndex && (currentStepIndex = i)" />
+                </div>
+
+                <v-btn v-if="!isLastStep" color="primary" variant="flat" rounded="pill" class="text-none px-6"
+                    append-icon="mdi-arrow-right" :disabled="!canAdvance" @click="nextStep">
+                    {{ currentStepIndex === 0 ? 'Vamos começar' : 'Continuar' }}
+                </v-btn>
+                <v-btn v-else-if="creationStep === 'idle'" color="primary" variant="flat" rounded="pill" size="large"
+                    class="text-none px-8 create-btn" prepend-icon="mdi-rocket-launch" :loading="creating"
+                    @click="finalizeAndGo">
+                    {{ !smAndDown ? 'Criar Minha Loja' : 'Criar' }}
+                </v-btn>
+                <div v-else />
+            </div>
+        </footer>
         <main class="onboarding-content">
             <v-container class="content-container">
                 <v-window v-model="currentStepIndex" :touch="false">
@@ -915,7 +945,7 @@ const firstName = computed(() =>
         </main>
 
         <!-- ==================== FOOTER (navegação) ==================== -->
-        <footer class="onboarding-footer">
+        <footer class="d-sm-none onboarding-footer">
             <div class="footer-content">
                 <v-btn v-if="!isFirstStep && creationStep === 'idle'" variant="text" prepend-icon="mdi-arrow-left"
                     class="text-none" :disabled="creating" @click="prevStep">
@@ -937,7 +967,7 @@ const firstName = computed(() =>
                 <v-btn v-else-if="creationStep === 'idle'" color="primary" variant="flat" rounded="pill" size="large"
                     class="text-none px-8 create-btn" prepend-icon="mdi-rocket-launch" :loading="creating"
                     @click="finalizeAndGo">
-                    Criar minha loja
+                    {{ !smAndDown ? 'Criar Minha Loja' : 'Criar' }}
                 </v-btn>
                 <div v-else />
             </div>

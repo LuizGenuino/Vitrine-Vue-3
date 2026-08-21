@@ -134,7 +134,7 @@ const router = createRouter({
         {
             path: '/onboarding', // Corrigido de '/onboarding' para 'onboarding'
             name: 'onboarding',
-            component: () => import('@/pages/dashboard/OnboardingPage.vue'),
+            component: () => import('@/pages/dashboard/Onboarding/OnboardingPage.vue'),
             meta: { hideLayout: true },
         },
     ],
