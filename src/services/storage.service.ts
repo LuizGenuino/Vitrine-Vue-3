@@ -1,15 +1,21 @@
 import { supabase } from '@/lib/supabase'
 import { useAuthStore } from '@/stores/auth.store'
 import { ServiceError } from './base.service'
+import { utils } from '@/utils/utils'
 
 export type BucketName = 'avatars' | 'store-logos' | 'store-banners'
     | 'products' | 'documents' | 'imports'
 
+
+
 class StorageService {
     async upload(bucket: BucketName, path: string, file: File, upsert = true) {
+
+        const fileWebp = await utils().convertToWebP(file, file.name)
+
         const { data, error } = await supabase.storage
             .from(bucket)
-            .upload(path, file, { upsert, cacheControl: '3600' })
+            .upload(path, fileWebp, { upsert, cacheControl: '3600' })
         if (error) throw ServiceError.from(error)
         return data
     }

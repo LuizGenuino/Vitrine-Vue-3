@@ -399,8 +399,8 @@ const { execute: createStore, loading: creating } = useAsyncAction(
             p_name: form.storeName.trim(),
             p_slug: form.slug,
             p_email: form.email.trim(),
-            p_phone: form.whatsapp.trim() || undefined,
-            p_cnpj: form.cnpj.trim() || undefined,
+            p_phone: form.whatsapp.trim() || "",
+            p_cnpj: form.cnpj.trim() || "",
         })
 
         if (error) throw error

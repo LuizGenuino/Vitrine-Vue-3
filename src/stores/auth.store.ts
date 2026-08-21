@@ -15,6 +15,7 @@ export const useAuthStore = defineStore('auth', () => {
     const loading = ref(true)
 
     const isAuthenticated = computed(() => !!session.value)
+    
     const currentStore = computed(() => {
         const relation = stores.value.find(
             (s: StoresWithRelations) => s.store_id === currentStoreId.value

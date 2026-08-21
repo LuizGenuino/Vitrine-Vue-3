@@ -128,13 +128,14 @@ const router = createRouter({
                     name: 'plans',
                     component: () => import('@/pages/dashboard/SubscriptionPlansPage.vue'),
                 },
-                {
-                    path: 'onboarding', // Corrigido de '/onboarding' para 'onboarding'
-                    name: 'onboarding',
-                    component: () => import('@/pages/dashboard/OnboardingPage.vue'),
-                    meta: { hideLayout: true },
-                },
+
             ],
+        },
+        {
+            path: '/onboarding', // Corrigido de '/onboarding' para 'onboarding'
+            name: 'onboarding',
+            component: () => import('@/pages/dashboard/OnboardingPage.vue'),
+            meta: { hideLayout: true },
         },
     ],
 });
