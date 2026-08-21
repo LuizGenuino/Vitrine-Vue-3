@@ -1532,6 +1532,16 @@ export type Database = {
             }
         }
         Functions: {
+            create_store: {
+                Args: {
+                    p_name: string
+                    p_slug: string
+                    p_email: string
+                    p_phone?: string
+                    p_cnpj?: string
+                }
+                Returns: Database["public"]["Tables"]["stores"]["Row"]
+            }
             anonymize_customer: {
                 Args: {
                     p_customer: string

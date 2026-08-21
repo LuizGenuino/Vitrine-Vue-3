@@ -1,77 +1,70 @@
-// @ts-nocheck
+// src/router/index.ts
 import { createRouter, createWebHistory } from 'vue-router';
-import { useAuthStore } from '@/stores/auth.store';
 import { requireAuth } from './guards';
 
 const router = createRouter({
     history: createWebHistory(),
     routes: [
-
         {
             path: '/invite/:id',
             name: 'invite',
             component: () => import('@/pages/public/InvitePage.vue'),
-            meta: { public: true }, // não passa pelo requireAuth
+            meta: { public: true },
         },
         {
             path: '/',
             component: () => import('@/layouts/HomeLayout.vue'),
+            meta: { public: true }, // Adicionado public para a landing page
             children: [
                 { path: '', name: 'landing', component: () => import('@/pages/public/LandingPage.vue') },
             ],
         },
-        // src/router/index.ts
         {
             path: '/s/:storeSlug',
             component: () => import('@/layouts/StoreLayout.vue'),
-            meta: { public: true }, // 🔥 Toda a árvore pública
+            meta: { public: true },
             children: [
                 {
-                    path: '',                        // → /s/:storeSlug
+                    path: '',
                     name: 'storefront',
                     component: () => import('@/pages/public/StorefrontPage.vue'),
                 },
                 {
-                    path: 'produto/:productSlug',    // → /s/:storeSlug/produto/:productSlug
+                    path: 'produto/:productSlug',
                     name: 'storefront-product',
                     component: () => import('@/pages/public/ProductPage.vue'),
                 },
-                // {
-                //     path: 'categoria/:categorySlug', // → /s/:storeSlug/categoria/:categorySlug
-                //     name: 'storefront-category',
-                //     component: () => import('@/pages/public/CategoryPage.vue'),
-                // },
                 {
-                    path: 'carrinho',                // → /s/:storeSlug/carrinho
+                    path: 'carrinho',
                     name: 'storefront-cart',
                     component: () => import('@/pages/public/CartPage.vue'),
                 },
                 {
-                    path: 'checkout',                // → /s/:storeSlug/checkout
+                    path: 'checkout',
                     name: 'storefront-checkout',
                     component: () => import('@/pages/public/CheckoutPage.vue'),
                 },
                 {
-                    path: 'pedido/:orderNumber',     // → /s/:storeSlug/pedido/:orderNumber
+                    path: 'pedido/:orderNumber',
                     name: 'storefront-order-status',
                     component: () => import('@/pages/public/OrderStatusPage.vue'),
                 },
                 {
-                    path: 'busca',                   // → /s/:storeSlug/busca?q=...
+                    path: 'busca',
                     name: 'storefront-search',
                     component: () => import('@/pages/public/SearchPage.vue'),
                 },
                 {
-                    path: ':pathMatch(.*)*',         // 404 dentro da vitrine
+                    path: ':pathMatch(.*)*',
                     name: 'storefront-not-found',
                     component: () => import('@/pages/public/StorefrontNotFound.vue'),
                 },
             ],
         },
-
         {
             path: '/auth',
             component: () => import('@/layouts/AuthLayout.vue'),
+            meta: { public: true }, // Adicionado public para as telas de auth
             children: [
                 { path: '/login', name: 'login', component: () => import('@/pages/auth/LoginPage.vue') },
                 { path: '/cadastro', name: 'register', component: () => import('@/pages/auth/RegisterPage.vue') },
@@ -82,8 +75,7 @@ const router = createRouter({
         {
             path: '/dashboard',
             component: () => import('@/layouts/DashboardLayout.vue'),
-            beforeEnter: requireAuth,
-            meta: { requiresAuth: true },
+            // REMOVIDO: beforeEnter: requireAuth (já é tratado globalmente abaixo)
             children: [
                 { path: '', name: 'overview', component: () => import('@/pages/dashboard/OverviewPage.vue') },
                 {
@@ -137,81 +129,16 @@ const router = createRouter({
                     component: () => import('@/pages/dashboard/SubscriptionPlansPage.vue'),
                 },
                 {
-                    path: '/onboarding',
+                    path: 'onboarding', // Corrigido de '/onboarding' para 'onboarding'
                     name: 'onboarding',
                     component: () => import('@/pages/dashboard/OnboardingPage.vue'),
-                    meta: { requiresAuth: true, hideLayout: true },
+                    meta: { hideLayout: true },
                 },
-                //sudo area
-                // {
-                //     path: 'admin',
-                //     beforeEnter: requireRole(['OWNER', 'ADMIN']),
-                //     children: [
-                //         {
-                //             path: 'usuarios',
-                //             name: 'users',
-                //             beforeEnter: requireRole(['OWNER', 'ADMIN']),
-                //             component: () => import('@/pages/dashboard/UsersPage.vue'),
-                //         },
-                //         {
-                //             path: 'clientes',
-                //             name: 'customers',
-                //             beforeEnter: requireRole(['OWNER', 'ADMIN']),
-                //             component: () => import('@/pages/dashboard/CustomersPage.vue'),
-                //         },
-                //         {
-                //             path: 'lojas',
-                //             name: 'stores',
-                //             beforeEnter: requireRole(['OWNER', 'ADMIN']),
-                //             component: () => import('@/pages/dashboard/StoresPage.vue'),
-                //         },
-                //         {
-                //             path: 'planos',
-                //             name: 'plans',
-                //             beforeEnter: requireRole(['OWNER', 'ADMIN']),
-                //             component: () => import('@/pages/dashboard/SubscriptionPlansPage.vue'),
-                //         },
-                //         {
-                //             path: 'configuracoes-gerais',
-                //             name: 'general-settings',
-                //             beforeEnter: requireRole(['OWNER', 'ADMIN']),
-                //             component: () => import('@/pages/dashboard/GeneralSettingsPage.vue'),
-                //         },
-                //     ]
-                // }
-
             ],
         },
     ],
 });
 
-
-router.beforeEach(requireAuth)
-
-// router.beforeEach(async (to) => {
-//     const authStore = useAuthStore();
-//     authStore.init();
-
-//     if (authStore.loading) {
-//         await new Promise<void>((resolve) => {
-//             const stop = setInterval(() => {
-//                 if (!authStore.loading) {
-//                     clearInterval(stop);
-//                     resolve();
-//                 }
-//             }, 50);
-//         });
-//     }
-
-//     if (to.meta.requiresAuth && !authStore.isAuthenticated) {
-//         return { name: 'login' };
-//     }
-
-//     if ((to.name === 'login' || to.name === 'register') && authStore.isAuthenticated) {
-//         return { name: 'overview' };
-//     }
-
-//     return true;
-// });
+router.beforeEach(requireAuth);
 
 export default router;

@@ -386,14 +386,27 @@ const { execute: createStore, loading: creating } = useAsyncAction(
         /* --------- 1. Cria loja + subscription + membership --------- */
         creationStep.value = 'creating_store'
 
-        const store = await storesService.createWithOnboarding({
-            name: form.storeName.trim(),
-            slug: form.slug,
-            email: form.email.trim(),
-            phone: form.whatsapp.trim() || undefined,
-            cnpj: form.cnpj.trim() || undefined,
-            planTier: 'FREE',
+        // const store = await storesService.createWithOnboarding({
+        //     name: form.storeName.trim(),
+        //     slug: form.slug,
+        //     email: form.email.trim(),
+        //     phone: form.whatsapp.trim() || undefined,
+        //     cnpj: form.cnpj.trim() || undefined,
+        //     planTier: 'FREE',
+        // })
+
+        const { data: store, error } = await supabase.rpc('create_store', {
+            p_name: form.storeName.trim(),
+            p_slug: form.slug,
+            p_email: form.email.trim(),
+            p_phone: form.whatsapp.trim() || undefined,
+            p_cnpj: form.cnpj.trim() || undefined,
         })
+
+        if (error) throw error
+        if (!store) {
+            return
+        }
 
         /* --------- 2. Aplica settings iniciais (tema, WhatsApp, cidade) --------- */
         await supabase.from('stores').update({
