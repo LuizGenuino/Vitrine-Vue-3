@@ -151,7 +151,7 @@ const onboardingSteps = computed<OnboardingStep[]>(() => [
         title: 'Cadastrar produtos',
         description: 'Publique pelo menos 1 produto ativo',
         done: activeProducts.value > 0,
-        action: { label: 'Novo produto', to: { name: 'products-create' } },
+        action: { label: 'Novo produto', to: { name: 'products' } },
     },
     {
         key: 'payment',
@@ -257,7 +257,7 @@ const firstName = computed(() =>
                     Ver minha vitrine
                 </v-btn>
                 <v-btn color="primary" prepend-icon="mdi-plus" rounded="pill" elevation="0" class="text-none px-6"
-                    @click="router.push({ name: 'products-create' })">
+                    @click="router.push({ name: 'products' })">
                     Novo produto
                 </v-btn>
             </div>

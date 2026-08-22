@@ -100,7 +100,6 @@ interface ProductRow extends Product {
     product_images: { url: string; sort_order: number }[]
     category: Pick<Category, 'id' | 'name' | 'slug'> | null
     stock_balance: number
-    compare_at_price?: number
 }
 
 const results = ref<ProductRow[]>([])
@@ -168,7 +167,7 @@ async function runSearch() {
         let query = supabase
             .from('products')
             .select(
-                `id, name, slug, description, price, compare_at_price, sku, is_featured, status,
+                `id, name, slug, description, price, sku, is_featured, status,
          category_id,
          category:categories(id, name, slug),
          product_images(url, sort_order),
@@ -198,23 +197,16 @@ async function runSearch() {
         if (state.minPrice != null) query = query.gte('price', state.minPrice)
         if (state.maxPrice != null) query = query.lte('price', state.maxPrice)
 
-        /* Promoção */
-        if (state.onSale) {
-            query = query.not('compare_at_price', 'is', null).gt('compare_at_price', 0)
-        }
-
         /* Ordenação */
         switch (state.sort) {
             case 'price_asc': query = query.order('price', { ascending: true }); break
             case 'price_desc': query = query.order('price', { ascending: false }); break
             case 'newest': query = query.order('created_at', { ascending: false }); break
-            case 'best_selling': query = query.order('sales_count', { ascending: false, nullsFirst: false }); break
             case 'name_asc': query = query.order('name', { ascending: true }); break
             default:
                 /* Relevância: destaques + mais vendidos como proxy */
                 query = query
                     .order('is_featured', { ascending: false })
-                    .order('sales_count', { ascending: false, nullsFirst: false })
         }
 
         query = query.range(from, to)
@@ -525,10 +517,6 @@ function productStock(p: ProductRow): number {
     return Number(bal)
 }
 
-function discountPct(p: ProductRow): number | null {
-    if (!p.compare_at_price || Number(p.compare_at_price) <= Number(p.price)) return null
-    return Math.round((1 - Number(p.price) / Number(p.compare_at_price)) * 100)
-}
 </script>
 
 <template>
@@ -728,10 +716,6 @@ function discountPct(p: ProductRow): number | null {
 
                                     <!-- Badges -->
                                     <div class="product-badges">
-                                        <v-chip v-if="discountPct(p)" color="error" size="x-small" variant="flat"
-                                            class="font-weight-bold">
-                                            -{{ discountPct(p) }}%
-                                        </v-chip>
                                         <v-chip v-if="p.is_featured" color="warning" size="x-small" variant="flat">
                                             <v-icon size="12" start>mdi-star</v-icon>
                                             Destaque
@@ -755,10 +739,6 @@ function discountPct(p: ProductRow): number | null {
                                         {{ p.name }}
                                     </div>
                                     <div class="mt-2 d-flex align-baseline ga-2 flex-wrap">
-                                        <span v-if="p.compare_at_price && Number(p.compare_at_price) > Number(p.price)"
-                                            class="text-caption text-decoration-line-through text-medium-emphasis">
-                                            {{ brl(p.compare_at_price) }}
-                                        </span>
                                         <span class="text-body-1 font-weight-black"
                                             :style="{ color: `rgb(var(--v-theme-${themeColor}))` }">
                                             {{ brl(p.price) }}

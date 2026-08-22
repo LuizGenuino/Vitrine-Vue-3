@@ -128,6 +128,11 @@ const router = createRouter({
                     name: 'plans',
                     component: () => import('@/pages/dashboard/SubscriptionPlansPage.vue'),
                 },
+                {
+                    path: 'perfil',
+                    name: 'profile',
+                    component: () => import('@/pages/dashboard/ProfilePage.vue'),
+                },
 
             ],
         },

@@ -50,15 +50,11 @@ const cartItemCount = computed(() => cart.itemCount)
 
     <!--  Store carregada  -->
     <div v-else class="storefront-layout" :style="{ '--store-theme': themeColor }">
-
-        <!-- Banner (opcional) -->
-        <div v-if="store?.banner_url" class="storefront-banner"
-            :style="{ backgroundImage: `url(${store.banner_url})` }" />
-
+        
         <!-- Header -->
         <header class="storefront-header">
             <router-link :to="{ name: 'storefront', params: { storeSlug } }" class="header-brand">
-                <v-avatar v-if="store?.logo_url" :image="store.logo_url" size="40" rounded="lg" />
+                <v-avatar v-if="store?.logo_url" :image="store.logo_url" size="50" rounded="lg" />
                 <span class="brand-name">{{ store?.name }}</span>
             </router-link>
 
@@ -72,6 +68,9 @@ const cartItemCount = computed(() => cart.itemCount)
                 </v-btn>
             </div>
         </header>
+        <!-- Banner (opcional) -->
+        <div v-if="store?.banner_url" class="storefront-banner"
+            :style="{ backgroundImage: `url(${store.banner_url})` }" />
 
         <!-- Conteúdo -->
         <main class="storefront-main">
@@ -101,7 +100,8 @@ const cartItemCount = computed(() => cart.itemCount)
 }
 
 .storefront-banner {
-    height: 200px;
+    height: 640px;
+    max-height: 75vh;
     background-size: cover;
     background-position: center;
 }

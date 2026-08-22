@@ -690,8 +690,8 @@ onMounted(() => {
 }
 
 .hero-logo {
-    width: 80px;
-    height: 80px;
+    width: 140px;
+    height: 140px;
     margin: 0 auto 16px;
     border-radius: 16px;
     overflow: hidden;

@@ -13,6 +13,7 @@ import { supabase } from '@/lib/supabase'
 import EmptyState from '@/components/base/EmptyState.vue'
 
 import type { Store } from '@/types/models'
+import ThemeColorPicker from '@/components/dashboard/ThemeColorPicker.vue'
 
 /* -------------------------------------------------------------------------- */
 /*  Setup                                                                     */
@@ -23,7 +24,7 @@ const notify = useNotifications()
 const { currentStore, currentStoreId, currentRole } = storeToRefs(auth)
 
 const canEdit = computed(() =>
-    currentRole.value && [ 'OWNER', 'ADMIN'].includes(currentRole.value),
+    currentRole.value && ['OWNER', 'ADMIN'].includes(currentRole.value),
 )
 
 const isOwner = computed(() => currentRole.value === 'OWNER')
@@ -836,20 +837,9 @@ onMounted(() => {
                         </v-col>
 
                         <v-col cols="12">
-                            <v-divider class="my-4" />
-                            <div class="text-subtitle-1 font-weight-bold mb-4">Cor de destaque</div>
-
                             <div class="d-flex align-center ga-4 flex-wrap">
-                                <div class="color-preview" :style="{ background: form.settings.theme_color }" />
-                                <v-text-field v-model="form.settings.theme_color" label="Cor primária"
-                                    variant="outlined" density="comfortable" style="max-width: 200px"
-                                    :readonly="!canEdit" prepend-inner-icon="mdi-palette" />
-                                <div class="d-flex ga-1">
-                                    <button
-                                        v-for="c in ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#ec4899', '#0ea5e9', '#000000']"
-                                        :key="c" class="color-swatch" :style="{ background: c }" :disabled="!canEdit"
-                                        @click="canEdit && (form.settings.theme_color = c)" />
-                                </div>
+                                <ThemeColorPicker v-model="form.settings.theme_color" :can-edit="canEdit"
+                                    default-color="#6366f1" />
                             </div>
                         </v-col>
 
