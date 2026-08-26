@@ -10,6 +10,9 @@ import { storesService } from '@/services/stores.service'
 import { storageService } from '@/services/storage.service'
 import { supabase } from '@/lib/supabase'
 import { useDisplay } from 'vuetify'
+import ThemeColorPicker from '@/components/dashboard/ThemeColorPicker.vue'
+import { UFS_LIST } from '@/utils/ufs'
+import AppTextField from '@/components/base/AppTextField.vue'
 
 
 const { smAndDown } = useDisplay()
@@ -234,6 +237,10 @@ function onSlugManualEdit() {
     slugAutoSync.value = false
 }
 
+function onSlugManualEditOff() {
+    slugAutoSync.value = true
+}
+
 const slugCheck = reactive({
     checking: false,
     available: true,
@@ -416,7 +423,7 @@ const { execute: createStore, loading: creating } = useAsyncAction(
             settings: {
                 theme_color: form.themeColor,
                 show_prices: true,
-                checkout_via: 'both',
+                checkout_via: 'whatsapp',
                 whatsapp_number: form.whatsapp.replace(/\D/g, '') || null,
                 allow_guest_checkout: true,
                 require_cpf: false,
@@ -682,13 +689,18 @@ const firstName = computed(() =>
                             <div class="form-container">
                                 <v-text-field v-model="form.storeName" label="Nome da loja *"
                                     placeholder="Ex: Doceria da Ana" variant="outlined" density="comfortable"
-                                    prepend-inner-icon="mdi-storefront-outline" autofocus />
+                                    prepend-inner-icon="mdi-storefront-outline" autofocus :rules="[
+                                        value => !!value || 'Campo obrigatório'
+                                    ]" />
 
                                 <div class="mt-4">
                                     <v-text-field v-model="form.slug" label="Endereço da sua vitrine *"
                                         variant="outlined" density="comfortable" prefix="vibestore.app/s/"
                                         :error="!!form.slug && !isSlugValid && !slugCheck.checking"
-                                        :messages="slugCheck.message" @input="onSlugManualEdit">
+                                        :messages="slugCheck.message" @input="onSlugManualEdit"
+                                        @blur="() => form.slug.length === 0 && onSlugManualEditOff()" :rules="[
+                                            value => !!value || 'Campo obrigatório'
+                                        ]">
                                         <template #append-inner>
                                             <v-progress-circular v-if="slugCheck.checking" indeterminate size="16"
                                                 width="2" />
@@ -706,8 +718,7 @@ const firstName = computed(() =>
                                         <code class="preview-url">🔗 {{ publicUrlPreview }}</code>
                                     </v-card>
                                 </div>
-
-                                <v-text-field v-model="form.cnpj" label="CNPJ (opcional)" variant="outlined"
+                                <AppTextField v-model="form.cnpj" mask="cnpj" label="CNPJ (opcional)" variant="outlined"
                                     density="comfortable" prepend-inner-icon="mdi-card-account-details-outline"
                                     placeholder="00.000.000/0000-00" hint="Você pode adicionar depois se preferir"
                                     persistent-hint class="mt-4" />
@@ -756,21 +767,7 @@ const firstName = computed(() =>
                                     @change="handleLogoChange">
 
                                 <!-- Cor de destaque -->
-                                <div class="text-subtitle-2 font-weight-bold mb-2 mt-6">
-                                    Cor de destaque
-                                </div>
-                                <div class="d-flex align-center ga-3 flex-wrap">
-                                    <div class="color-preview" :style="{ background: form.themeColor }" />
-                                    <v-text-field v-model="form.themeColor" variant="outlined" density="comfortable"
-                                        hide-details style="max-width: 160px" prepend-inner-icon="mdi-palette" />
-                                    <div class="d-flex ga-1 flex-wrap">
-                                        <button
-                                            v-for="c in ['#6366f1', '#ec4899', '#f59e0b', '#10b981', '#ef4444', '#0ea5e9', '#a855f7', '#000000']"
-                                            :key="c" type="button" class="color-swatch"
-                                            :class="{ active: form.themeColor === c }" :style="{ background: c }"
-                                            @click="form.themeColor = c" />
-                                    </div>
-                                </div>
+                                <ThemeColorPicker v-model="form.themeColor" default-color="#6366f1" />
 
                                 <v-alert type="info" variant="tonal" rounded="lg" density="compact" class="mt-6"
                                     icon="mdi-information-outline">
@@ -802,10 +799,12 @@ const firstName = computed(() =>
                                     variant="outlined" density="comfortable" prepend-inner-icon="mdi-email-outline"
                                     hint="Para receber notificações de pedidos" persistent-hint />
 
-                                <v-text-field v-model="form.whatsapp" label="WhatsApp (recomendado)" variant="outlined"
+                                <AppTextField mask="tel" v-model="form.whatsapp" label="WhatsApp *" variant="outlined"
                                     density="comfortable" prepend-inner-icon="mdi-whatsapp"
                                     placeholder="(11) 99999-9999" hint="Aparece como opção de checkout na vitrine"
-                                    persistent-hint class="mt-4" />
+                                    persistent-hint class="mt-4" :rules="[
+                                        (value: string) => !!value || 'Campo obrigatório'
+                                    ]" />
 
                                 <v-row dense class="mt-3">
                                     <v-col cols="8">
@@ -813,8 +812,8 @@ const firstName = computed(() =>
                                             density="comfortable" prepend-inner-icon="mdi-map-marker-outline" />
                                     </v-col>
                                     <v-col cols="4">
-                                        <v-text-field v-model="form.state" label="UF" variant="outlined"
-                                            density="comfortable" maxlength="2" />
+                                        <v-autocomplete v-model="form.state" label="UF" variant="outlined"
+                                            density="comfortable" maxlength="2" :items="UFS_LIST"></v-autocomplete>
                                     </v-col>
                                 </v-row>
 
@@ -945,7 +944,7 @@ const firstName = computed(() =>
         </main>
 
         <!-- ==================== FOOTER (navegação) ==================== -->
-        <footer class="d-sm-none onboarding-footer">
+        <footer class="onboarding-footer">
             <div class="footer-content">
                 <v-btn v-if="!isFirstStep && creationStep === 'idle'" variant="text" prepend-icon="mdi-arrow-left"
                     class="text-none" :disabled="creating" @click="prevStep">
