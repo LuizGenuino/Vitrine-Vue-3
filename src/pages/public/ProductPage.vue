@@ -67,33 +67,48 @@ function initialsOf(name: string): string {
 /* -------------------------------------------------------------------------- */
 
 const productSlug = computed(() => route.params.productSlug as string)
+const storeId = computed(() => store.value?.id)
 
-const productQuery = useSupabaseQuery(async () => {
-    if (!store.value || !productSlug.value) return null
 
-    const { data, error } = await supabase
-        .from('products')
-        .select(`
-      *,
-      category:categories(id, name, slug),
-      product_images(id, url, alt_text, is_primary, sort_order),
-      product_attributes(id, name, value)
-    `)
-        .eq('store_id', store.value.id)
-        .eq('slug', productSlug.value)
-        .eq('status', 'ACTIVE')
-        .is('deleted_at', null)
-        .maybeSingle()
+const productQuery = useSupabaseQuery<ProductFull | null>(
+    async () => {
+        if (!storeId.value || !productSlug.value) {
+            return null
+        }
 
-    if (error) throw error
-    return data as unknown as ProductFull | null
-}, { watchSource: [store.value?.id as any, productSlug] })
+        const { data, error } = await supabase
+            .from('products')
+            .select(`
+                *,
+                category:categories(id, name, slug),
+                product_images(id, url, alt_text, is_primary, sort_order),
+                product_attributes(id, name, value)
+            `)
+            .eq('store_id', storeId.value)
+            .eq('slug', productSlug.value)
+            .eq('status', 'ACTIVE')
+            .is('deleted_at', null)
+            .maybeSingle()
+
+        if (error) throw error
+
+        return data as unknown as ProductFull | null
+    },
+    {
+        watchSource: [
+            storeId,
+            productSlug,
+        ],
+    },
+)
 
 const product = computed(() => productQuery.data.value)
 const loading = computed(() => productQuery.loading.value)
 const notFound = computed(() =>
     !loading.value && !product.value,
 )
+const productId = computed(() => product.value?.id)
+const categoryId = computed(() => product.value?.category_id)
 
 /* -------------------------------------------------------------------------- */
 /*  Analytics — dispara VIEW_PRODUCT ao carregar                              */
@@ -117,15 +132,24 @@ watch(product, (p) => {
 /*  Query — saldo de estoque                                                  */
 /* -------------------------------------------------------------------------- */
 
-const stockQuery = useSupabaseQuery(async () => {
-    if (!product.value) return 0
-    const { data } = await supabase
-        .from('product_stock_balances')
-        .select('balance')
-        .eq('product_id', product.value.id)
-        .maybeSingle()
-    return data?.balance ?? 0
-}, { watchSource: [product.value?.id as any] })
+const stockQuery = useSupabaseQuery<number>(
+    async () => {
+        if (!productId.value) return 0
+
+        const { data, error } = await supabase
+            .from('product_stock_balances')
+            .select('balance')
+            .eq('product_id', productId.value)
+            .maybeSingle()
+
+        if (error) throw error
+
+        return data?.balance ?? 0
+    },
+    {
+        watchSource: [productId],
+    },
+)
 
 const stock = computed(() => stockQuery.data.value ?? 0)
 const isOutOfStock = computed(() => stock.value <= 0)
@@ -134,22 +158,36 @@ const isLowStock = computed(() => stock.value > 0 && stock.value <= 5)
 /* -------------------------------------------------------------------------- */
 /*  Query — reviews aprovadas                                                 */
 /* -------------------------------------------------------------------------- */
+const reviewsQuery = useSupabaseQuery<ReviewWithCustomer[]>(
+    async () => {
+        if (!productId.value) return []
 
-const reviewsQuery = useSupabaseQuery(async () => {
-    if (!product.value) return []
-    const { data } = await supabase
-        .from('reviews')
-        .select(`
-      id, rating, title, comment, created_at,
-      customer:customers(full_name)
-    `)
-        .eq('product_id', product.value.id)
-        .eq('is_approved', true)
-        .is('deleted_at', null)
-        .order('created_at', { ascending: false })
-        .limit(20)
-    return (data ?? []) as unknown as ReviewWithCustomer[]
-}, { watchSource: [product.value?.id as any] })
+        const { data, error } = await supabase
+            .from('reviews')
+            .select(`
+                id,
+                rating,
+                title,
+                comment,
+                created_at,
+                customer:customers(full_name)
+            `)
+            .eq('product_id', productId.value)
+            .eq('is_approved', true)
+            .is('deleted_at', null)
+            .order('created_at', {
+                ascending: false,
+            })
+            .limit(20)
+
+        if (error) throw error
+
+        return (data ?? []) as unknown as ReviewWithCustomer[]
+    },
+    {
+        watchSource: [productId],
+    },
+)
 
 const reviews = computed(() => reviewsQuery.data.value ?? [])
 
@@ -170,20 +208,47 @@ const ratingStats = computed(() => {
 /*  Query — produtos relacionados                                             */
 /* -------------------------------------------------------------------------- */
 
-const relatedQuery = useSupabaseQuery(async () => {
-    if (!product.value?.category_id || !store.value) return []
-    const { data } = await supabase
-        .from('products')
-        .select(`id, name, slug, price,
-             product_images(url, is_primary)`)
-        .eq('store_id', store.value.id)
-        .eq('category_id', product.value.category_id)
-        .eq('status', 'ACTIVE')
-        .is('deleted_at', null)
-        .neq('id', product.value.id)
-        .limit(6)
-    return (data ?? []) as any[]
-}, { watchSource: [product.value?.id as any] })
+const relatedQuery = useSupabaseQuery<any[]>(
+    async () => {
+        if (
+            !storeId.value ||
+            !productId.value ||
+            !categoryId.value
+        ) {
+            return []
+        }
+
+        const { data, error } = await supabase
+            .from('products')
+            .select(`
+                id,
+                name,
+                slug,
+                price,
+                product_images(
+                    url,
+                    is_primary
+                )
+            `)
+            .eq('store_id', storeId.value)
+            .eq('category_id', categoryId.value)
+            .eq('status', 'ACTIVE')
+            .is('deleted_at', null)
+            .neq('id', productId.value)
+            .limit(6)
+
+        if (error) throw error
+
+        return data ?? []
+    },
+    {
+        watchSource: [
+            storeId,
+            productId,
+            categoryId,
+        ],
+    },
+)
 
 const relatedProducts = computed(() => relatedQuery.data.value ?? [])
 
@@ -346,9 +411,6 @@ function primaryImageOf(p: any): string {
     return primary?.url ?? p.product_images?.[0]?.url ?? ''
 }
 
-onMounted(() => {
-    productQuery.refresh()
-})
 </script>
 
 <template>
