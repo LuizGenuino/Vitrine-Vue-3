@@ -208,23 +208,24 @@ const emailCheckLoading = ref(false)
 
 let emailDebounce: number | undefined
 
-watch(() => form.email, (email) => {
+watch(() => form.phone, (phone) => {
     window.clearTimeout(emailDebounce)
     existingCustomer.value = null
-    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || !store.value) return
+    if (!phone || !/^\(\d{2}\) \d{5}-\d{4}$/.test(phone) || !store.value) return
 
     emailDebounce = window.setTimeout(async () => {
         emailCheckLoading.value = true
-        const { data } = await supabase
-            .from('customers')
-            .select(`
-        id, full_name, phone, cpf_cnpj, birth_date,
-        addresses:customer_addresses(*)
-      `)
-            .eq('store_id', store.value!.id)
-            .eq('email', email.toLowerCase())
-            .is('deleted_at', null)
-            .maybeSingle()
+        const { data, error } = await supabase.rpc(
+            'find_customer_by_phone',
+            {
+                p_store_id: store.value!.id,
+                p_phone: onlyDigits(phone),
+            }
+        )
+
+        if (error) {
+            throw error
+        }
 
         if (data) {
             existingCustomer.value = data
@@ -352,8 +353,7 @@ const total = computed(() =>
 
 const identityErrors = computed(() => {
     const errs: Record<string, string> = {}
-    if (!form.email) errs.email = 'Obrigatório'
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) errs.email = 'E-mail inválido'
+    if (form.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) errs.email = 'E-mail inválido'
     if (!form.full_name.trim()) errs.full_name = 'Obrigatório'
     else if (form.full_name.trim().length < 3) errs.full_name = 'Nome muito curto'
     if (!form.phone) errs.phone = 'Obrigatório'
@@ -493,40 +493,51 @@ const { execute: placeOrder, loading: placing } = useAsyncAction(
         if (existingCustomer.value) {
             customerId = existingCustomer.value.id
             // Atualiza dados que podem ter mudado
-            await supabase.from('customers').update({
-                full_name: form.full_name.trim(),
-                phone: onlyDigits(form.phone),
-                cpf_cnpj: form.cpf_cnpj ? onlyDigits(form.cpf_cnpj) : null,
-                birth_date: form.birth_date || null,
-            }).eq('id', customerId)
-        } else {
-            const { data, error } = await supabase.from('customers').insert({
-                store_id: store.value.id,
-                full_name: form.full_name.trim(),
-                email: form.email.trim().toLowerCase(),
-                phone: onlyDigits(form.phone),
-                cpf_cnpj: form.cpf_cnpj ? onlyDigits(form.cpf_cnpj) : null,
-                birth_date: form.birth_date || null,
-            }).select('id').single()
+            const { data, error } = await supabase.rpc('update_customer', {
+                p_customer: customerId,
+                p_store_id: store.value.id,
+                p_full_name: form.full_name.trim(),
+                p_email: form.email.trim().toLowerCase(),
+                p_phone: onlyDigits(form.phone),
+                p_cpf_cnpj: form.cpf_cnpj ? onlyDigits(form.cpf_cnpj) : '',
+            })
+
             if (error) throw error
-            customerId = data.id
+            if (!data) return
+
+            customerId = data
+
+        } else {
+            const { data, error } = await supabase.rpc('create_customer', {
+                p_store_id: store.value.id,
+                p_full_name: form.full_name.trim(),
+                p_email: form.email.trim().toLowerCase(),
+                p_phone: onlyDigits(form.phone),
+                p_cpf_cnpj: form.cpf_cnpj ? onlyDigits(form.cpf_cnpj) : '',
+            })
+
+            if (error) throw error
+            if (!data) return
+
+            customerId = data
         }
 
         /* --- 2. Salva endereço (se solicitado) --- */
         if (form.save_address) {
-            await supabase.from('customer_addresses').insert({
-                customer_id: customerId,
-                label: form.address_label,
-                street: form.street.trim(),
-                number: form.number.trim(),
-                complement: form.complement.trim() || null,
-                neighborhood: form.neighborhood.trim(),
-                city: form.city.trim(),
-                state: form.state.trim().toUpperCase(),
-                postal_code: onlyDigits(form.postal_code),
-                country: 'BR',
-                is_default: !existingCustomer.value?.addresses?.length,
+            const { data, error } = await supabase.rpc("save_customer_address", {
+                p_customer_id: customerId,
+                p_label: form.address_label,
+                p_street: form.street.trim(),
+                p_number: form.number.trim(),
+                p_complement: form.complement.trim() || '',
+                p_neighborhood: form.neighborhood.trim(),
+                p_city: form.city.trim(),
+                p_state: form.state.trim().toUpperCase(),
+                p_postal_code: onlyDigits(form.postal_code),
+                p_country: 'BR',
+                p_is_default: !existingCustomer.value?.addresses?.length,
             })
+            if (error) throw error
         }
 
         /* --- 3. Gera número do pedido via RPC --- */
@@ -541,38 +552,37 @@ const { execute: placeOrder, loading: placing } = useAsyncAction(
             `Endereço: ${form.street}, ${form.number}${form.complement ? ` - ${form.complement}` : ''}, ${form.neighborhood}, ${form.city}/${form.state}, CEP ${form.postal_code}`,
         ].filter(Boolean).join('\n')
 
-        const { data: order, error: orderError } = await supabase.from('orders').insert({
-            store_id: store.value.id,
-            customer_id: customerId,
-            coupon_id: appliedCoupon.value?.id ?? null,
-            order_number: orderNumber as string,
-            status: 'PENDING',
-            subtotal: cart.subtotal,
-            discount: discount.value + pixDiscount.value,
-            shipping_cost: shippingCost.value,
-            total: finalTotal.value,
-            payment_method: form.payment_method,
-            notes,
-        }).select('id, order_number').single()
+        const { data: order, error: orderError } = await supabase.rpc("create_orders", {
+            p_store_id: store.value.id,
+            p_customer_id: customerId,
+            p_coupon_id: appliedCoupon.value?.id ?? null,
+            p_order_number: orderNumber as string,
+            p_subtotal: cart.subtotal,
+            p_discount: discount.value + pixDiscount.value,
+            p_shipping_cost: shippingCost.value,
+            p_total: finalTotal.value,
+            p_payment_method: form.payment_method,
+            p_notes: notes,
+        })
+
         if (orderError) throw orderError
 
         /* --- 5. Cria order_items --- */
-        await supabase.from('order_items').insert(
-            cart.items.map(item => ({
-                order_id: order.id,
-                product_id: item.product_id,
-                quantity: item.quantity,
-                unit_price: item.price,
-                total: item.price * item.quantity,
-            })),
-        )
+        Promise.allSettled(cart.items.map(item => (
+            supabase.rpc('create_order_items', {
+                p_order_id: order.id,
+                p_product_id: item.product_id,
+                p_quantity: item.quantity,
+                p_unit_price: item.price,
+                p_total: item.price * item.quantity,
+            })
+        )))
 
         /* --- 6. Cria order_payment inicial (PENDING) --- */
-        await supabase.from('order_payments').insert({
-            order_id: order.id,
-            gateway: form.payment_method === 'whatsapp' ? 'manual' : form.payment_method,
-            amount: finalTotal.value,
-            status: 'PENDING',
+        await supabase.rpc("create_order_payments", {
+            p_order_id: order.id,
+            p_gateway: form.payment_method === 'whatsapp' ? 'manual' : form.payment_method,
+            p_amount: finalTotal.value,
         })
 
         // /* --- 7. Incrementa uso do cupom --- */
@@ -696,13 +706,13 @@ const ufOptions = [
 
                     <div class="form-grid">
                         <div class="form-group full">
-                            <label class="form-label">E-mail *</label>
-                            <v-text-field v-model="form.email" type="email" placeholder="voce@email.com"
-                                variant="outlined" density="comfortable" hide-details
-                                prepend-inner-icon="mdi-email-outline" :error="!!identityErrors.email" />
-                            <p v-if="identityErrors.email" class="form-error">
-                                {{ identityErrors.email }}
-                            </p>
+
+                            <label class="form-label">Telefone *</label>
+                            <AppTextField mask="tel" v-model="form.phone" label="WhatsApp*" variant="outlined"
+                                density="comfortable" prepend-inner-icon="mdi-whatsapp" placeholder="(11) 99999-9999"
+                                hint="O Numero sera usado para contatos e notificações" persistent-hint :rules="[
+                                    (value: string) => !!value || 'Campo obrigatório'
+                                ]" />
 
                             <!-- Cliente reconhecido -->
                             <v-slide-y-transition>
@@ -730,7 +740,7 @@ const ufOptions = [
                         <div class="form-group full">
                             <label class="form-label">Nome completo *</label>
                             <v-text-field v-model="form.full_name" variant="outlined" density="comfortable" hide-details
-                                placeholder="Como no seu documento" prepend-inner-icon="mdi-account-outline"
+                                placeholder="Seu nome completo" prepend-inner-icon="mdi-account-outline"
                                 :error="!!identityErrors.full_name" />
                             <p v-if="identityErrors.full_name" class="form-error">
                                 {{ identityErrors.full_name }}
@@ -738,12 +748,13 @@ const ufOptions = [
                         </div>
 
                         <div class="form-group">
-                            <label class="form-label">Telefone *</label>
-                            <AppTextField mask="tel" v-model="form.phone" label="WhatsApp*" variant="outlined"
-                                density="comfortable" prepend-inner-icon="mdi-whatsapp" placeholder="(11) 99999-9999"
-                                hint="O Numero sera usado para contatos e notificações" persistent-hint :rules="[
-                                    (value: string) => !!value || 'Campo obrigatório'
-                                ]" />
+                            <label class="form-label">E-mail (opcional)</label>
+                            <v-text-field v-model="form.email" type="email" placeholder="voce@email.com"
+                                variant="outlined" density="comfortable" hide-details
+                                prepend-inner-icon="mdi-email-outline" :error="!!identityErrors.email" />
+                            <p v-if="identityErrors.email" class="form-error">
+                                {{ identityErrors.email }}
+                            </p>
                         </div>
 
                         <div class="form-group">
@@ -781,13 +792,12 @@ const ufOptions = [
                     <div class="form-grid">
                         <div class="form-group">
                             <label class="form-label">CEP *</label>
-                            <v-text-field v-model="form.postal_code" variant="outlined" density="comfortable"
-                                hide-details placeholder="00000-000" prepend-inner-icon="mdi-map-marker-outline"
-                                :loading="cepLoading" :error="!!addressErrors.postal_code"
-                                @blur="form.postal_code = formatCep(form.postal_code)" />
-                            <p v-if="addressErrors.postal_code" class="form-error">
-                                {{ addressErrors.postal_code }}
-                            </p>
+                            <AppTextField mask="cep" v-model="form.postal_code" label="CEP*" variant="outlined"
+                                density="comfortable" prepend-inner-icon="mdi-map-marker-outline"
+                                placeholder="00000-000" hint="Informe seu CEP para localizar o endereço" persistent-hint
+                                :rules="[
+                                    (value: string) => !!value || 'Campo obrigatório'
+                                ]" :loading="cepLoading" />
                             <a href="https://buscacepinter.correios.com.br" target="_blank" class="form-help-link">
                                 Não sei meu CEP
                             </a>
@@ -1646,7 +1656,6 @@ const ufOptions = [
     overflow: hidden;
     text-overflow: ellipsis;
     display: -webkit-box;
-    -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     line-height: 1.3;
 }

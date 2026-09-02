@@ -1599,6 +1599,93 @@ export type Database = {
                 Returns: string[]
             }
 
+            create_customer: {
+                Args: {
+                    p_store_id: string
+                    p_full_name: string
+                    p_email: string
+                    p_phone: string
+                    p_cpf_cnpj: string
+                }
+                Returns: string
+            }
+
+            create_orders: {
+                Args: {
+                    p_store_id: string
+                    p_customer_id: string
+                    p_order_number: string
+                    p_status?: Database["public"]["Enums"]["order_status"]
+                    p_subtotal: number
+                    p_discount: number
+                    p_shipping_cost: number
+                    p_total: number
+                    p_payment_method: string
+                    p_notes: string
+                    p_coupon_id?: string | null
+                }
+                Returns: Database["public"]["Tables"]["orders"]["Row"]
+            }
+
+            create_order_payments: {
+                Args: {
+                    p_order_id: string
+                    p_gateway: string
+                    p_amount: number
+                    p_status?: Database["public"]["Enums"]["order_status"]
+                }
+                Returns: string
+            }
+
+            create_order_items: {
+                Args: {
+                    p_order_id: string
+                    p_product_id: string
+                    p_quantity: number
+                    p_unit_price: number
+                    p_total: number
+                }
+                Returns: string
+            }
+
+            save_customer_address: {
+                Args: {
+                    p_customer_id: string
+                    p_label: string
+                    p_street: string
+                    p_number: string
+                    p_complement: string
+                    p_neighborhood: string
+                    p_city: string
+                    p_state: string
+                    p_postal_code: string
+                    p_country: string
+                    p_is_default: boolean
+                    p_address_id?: string | null
+                }
+                Returns: string
+            }
+
+            find_customer_by_phone: {
+                Args: {
+                    p_store_id: string
+                    p_phone: string
+                }
+                Returns: any
+            }
+
+            update_customer: {
+                Args: {
+                    p_customer: string
+                    p_store_id: string
+                    p_full_name: string
+                    p_email: string
+                    p_phone: string
+                    p_cpf_cnpj: string
+                }
+                Returns: string
+            }
+
             transfer_store_ownership: {
                 Args: {
                     p_store_id: string | null
