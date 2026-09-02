@@ -8,6 +8,7 @@ import { useCartStore } from '@/stores/cart.store'
 import { useNotifications } from '@/stores/notifications.store'
 import { useAsyncAction } from '@/composables/useAsyncAction'
 import { supabase } from '@/lib/supabase'
+import AppTextField from '@/components/base/AppTextField.vue'
 
 /* -------------------------------------------------------------------------- */
 /*  Setup                                                                     */
@@ -738,12 +739,11 @@ const ufOptions = [
 
                         <div class="form-group">
                             <label class="form-label">Telefone *</label>
-                            <v-text-field v-model="form.phone" variant="outlined" density="comfortable" hide-details
-                                placeholder="(11) 99999-9999" prepend-inner-icon="mdi-phone-outline"
-                                :error="!!identityErrors.phone" @blur="form.phone = formatPhone(form.phone)" />
-                            <p v-if="identityErrors.phone" class="form-error">
-                                {{ identityErrors.phone }}
-                            </p>
+                            <AppTextField mask="tel" v-model="form.phone" label="WhatsApp*" variant="outlined"
+                                density="comfortable" prepend-inner-icon="mdi-whatsapp" placeholder="(11) 99999-9999"
+                                hint="O Numero sera usado para contatos e notificações" persistent-hint :rules="[
+                                    (value: string) => !!value || 'Campo obrigatório'
+                                ]" />
                         </div>
 
                         <div class="form-group">

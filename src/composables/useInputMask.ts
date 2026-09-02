@@ -1,33 +1,33 @@
 export const maskRules = {
-  cpf: [
-    (value: string) =>
-      onlyNumbers(value).length === 11 ||
-      'CPF inválido',
-  ],
+    cpf: [
+        (value: string) =>
+            onlyNumbers(value).length === 11 ||
+            'CPF inválido',
+    ],
 
-  cnpj: [
-    (value: string) =>
-      onlyNumbers(value).length === 0 || onlyNumbers(value).length === 14 ||
-      'CNPJ inválido',
-  ],
+    cnpj: [
+        (value: string) =>
+            onlyNumbers(value).length === 0 || onlyNumbers(value).length === 14 ||
+            'CNPJ inválido',
+    ],
 
-  cep: [
-    (value: string) =>
-      onlyNumbers(value).length === 8 ||
-      'CEP inválido',
-  ],
+    cep: [
+        (value: string) =>
+            onlyNumbers(value).length === 0 || onlyNumbers(value).length === 8 ||
+            'CEP inválido',
+    ],
 
-  tel: [
-    (value: string) =>
-      [10, 11].includes(onlyNumbers(value).length) ||
-      'Telefone inválido',
-  ],
+    tel: [
+        (value: string) =>
+            onlyNumbers(value).length === 0 || [10, 11].includes(onlyNumbers(value).length) ||
+            'Telefone inválido',
+    ],
 
-  currency: [
-    (value: string) =>
-      Boolean(value) ||
-      'Informe um valor',
-  ],
+    currency: [
+        (value: string) =>
+            Boolean(value) ||
+            'Informe um valor',
+    ],
 }
 
 export type InputMaskType =

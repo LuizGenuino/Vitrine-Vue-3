@@ -14,6 +14,7 @@ import EmptyState from '@/components/base/EmptyState.vue'
 
 import type { Store } from '@/types/models'
 import ThemeColorPicker from '@/components/dashboard/ThemeColorPicker.vue'
+import AppTextField from '@/components/base/AppTextField.vue'
 
 /* -------------------------------------------------------------------------- */
 /*  Setup                                                                     */
@@ -692,9 +693,10 @@ onMounted(() => {
                                 </v-col>
 
                                 <v-col cols="12" md="6">
-                                    <v-text-field v-model="form.phone" label="Telefone" variant="outlined"
+
+                                    <AppTextField mask="tel" v-model="form.phone" label="Celular" variant="outlined"
                                         density="comfortable" prepend-inner-icon="mdi-phone-outline"
-                                        placeholder="(11) 99999-9999" :readonly="!canEdit" />
+                                        placeholder="(11) 99999-9999" persistent-hint :readonly="!canEdit" />
                                 </v-col>
 
                                 <v-col cols="12" md="6">
@@ -898,10 +900,13 @@ onMounted(() => {
                                 </v-col>
 
                                 <v-col cols="12" md="6">
-                                    <v-text-field v-model="form.settings.whatsapp_number"
-                                        label="Número WhatsApp para pedidos" variant="outlined" density="comfortable"
-                                        prepend-inner-icon="mdi-whatsapp" placeholder="5511999999999"
-                                        hint="Com DDI, sem espaços" :readonly="!canEdit" />
+
+                                    <AppTextField mask="tel" v-model="form.settings.whatsapp_number"
+                                        label="Número WhatsApp para pedidos *" variant="outlined" density="comfortable"
+                                        prepend-inner-icon="mdi-whatsapp" placeholder="(11) 99999-9999"
+                                        hint="Aparece como opção de checkout na vitrine" persistent-hint :rules="[
+                                            (value: string) => !!value || 'Campo obrigatório'
+                                        ]" />
                                 </v-col>
 
                                 <v-col cols="12" md="6">
