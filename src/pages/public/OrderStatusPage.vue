@@ -178,7 +178,9 @@ async function loadOrder() {
     const orderNumber = route.params.orderNumber as string
     const token = (route.query.token as string) || ''
 
-    if (!orderNumber || !token) {
+    console.log(`Carregando pedido ${orderNumber} com token ${token}...`)
+
+    if (!orderNumber ) {
         errorCode.value = 'INVALID_TOKEN'
         loading.value = false
         return

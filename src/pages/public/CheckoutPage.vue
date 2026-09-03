@@ -22,6 +22,8 @@ const notify = useNotifications()
 
 const { store, themeColor } = storeToRefs(sf)
 
+const token = ref<string | null>(null)
+
 /* -------------------------------------------------------------------------- */
 /*  Utils                                                                     */
 /* -------------------------------------------------------------------------- */
@@ -210,9 +212,9 @@ let emailDebounce: number | undefined
 
 watch(() => form.phone, (phone) => {
     window.clearTimeout(emailDebounce)
-    existingCustomer.value = null
+   
     if (!phone || !/^\(\d{2}\) \d{5}-\d{4}$/.test(phone) || !store.value) return
-
+     existingCustomer.value = null
     emailDebounce = window.setTimeout(async () => {
         emailCheckLoading.value = true
         const { data, error } = await supabase.rpc(
@@ -226,9 +228,9 @@ watch(() => form.phone, (phone) => {
         if (error) {
             throw error
         }
-
         if (data) {
-            existingCustomer.value = data
+            existingCustomer.value = await data
+             useExistingData()
         }
         emailCheckLoading.value = false
     }, 600)
@@ -489,7 +491,6 @@ const { execute: placeOrder, loading: placing } = useAsyncAction(
 
         /* --- 1. Cria ou atualiza customer --- */
         let customerId: string
-
         if (existingCustomer.value) {
             customerId = existingCustomer.value.id
             // Atualiza dados que podem ter mudado
@@ -566,6 +567,8 @@ const { execute: placeOrder, loading: placing } = useAsyncAction(
         })
 
         if (orderError) throw orderError
+
+        token.value = order?.access_token_hash ?? null
 
         /* --- 5. Cria order_items --- */
         Promise.allSettled(cart.items.map(item => (
@@ -649,6 +652,7 @@ const { execute: placeOrder, loading: placing } = useAsyncAction(
                 storeSlug: route.params.storeSlug,
                 orderNumber: order.order_number,
             },
+            query: { token: order.access_token_hash}
         })
     },
     { successMsg: 'Pedido criado com sucesso! 🎉' },
@@ -713,28 +717,6 @@ const ufOptions = [
                                 hint="O Numero sera usado para contatos e notificações" persistent-hint :rules="[
                                     (value: string) => !!value || 'Campo obrigatório'
                                 ]" />
-
-                            <!-- Cliente reconhecido -->
-                            <v-slide-y-transition>
-                                <v-card v-if="existingCustomer" variant="tonal" color="success" rounded="lg"
-                                    class="pa-3 mt-2 existing-customer">
-                                    <div class="d-flex align-center ga-3">
-                                        <v-icon color="success">mdi-account-check-outline</v-icon>
-                                        <div class="flex-grow-1">
-                                            <div class="text-body-2 font-weight-bold">
-                                                Bem-vindo(a) de volta, {{ existingCustomer.full_name.split(' ')[0] }}!
-                                            </div>
-                                            <div class="text-caption">
-                                                Encontramos seu cadastro. Quer preencher automaticamente?
-                                            </div>
-                                        </div>
-                                        <v-btn size="small" variant="flat" color="success" class="text-none"
-                                            @click="useExistingData">
-                                            Usar meus dados
-                                        </v-btn>
-                                    </div>
-                                </v-card>
-                            </v-slide-y-transition>
                         </div>
 
                         <div class="form-group full">

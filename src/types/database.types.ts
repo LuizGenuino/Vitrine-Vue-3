@@ -758,6 +758,8 @@ export type Database = {
                     total: number
                     updated_at: string
                     updated_by: string | null
+                    access_token_hash?: string | null
+                    delivered_at?: string | null
                 }
                 Insert: {
                     coupon_id?: string | null
