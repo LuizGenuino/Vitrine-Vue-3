@@ -537,6 +537,7 @@ const { execute: placeOrder, loading: placing } = useAsyncAction(
                 p_postal_code: onlyDigits(form.postal_code),
                 p_country: 'BR',
                 p_is_default: !existingCustomer.value?.addresses?.length,
+                p_address_id: existingCustomer.value?.addresses?.[0]?.id ?? null,
             })
             if (error) throw error
         }

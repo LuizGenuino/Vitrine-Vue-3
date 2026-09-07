@@ -134,7 +134,7 @@ const sortAsc = ref(false)
 /*  Modo de visualização                                                      */
 /* -------------------------------------------------------------------------- */
 
-const viewMode = ref<'table' | 'kanban'>('table')
+const viewMode = ref<'table' | 'kanban'>('kanban')
 
 /* -------------------------------------------------------------------------- */
 /*  Query — lista de pedidos                                                  */
