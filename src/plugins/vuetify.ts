@@ -60,8 +60,8 @@ export const vuetify = createVuetify({
             light: {
                 dark: false,
                 colors: {
-                    primary: '#4F46E5',
-                    secondary: '#14B8A6',
+                    primary: '#064E3B',
+                    secondary: '#10B981',
                     surface: '#FFFFFF',
                     background: '#F8FAFC',
                     'surface-variant': '#E2E8F0',
