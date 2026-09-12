@@ -435,7 +435,7 @@ function primaryImageOf(p: any): string {
             <p class="text-body-1 text-medium-emphasis mt-2">
                 Este produto pode ter sido removido ou está indisponível.
             </p>
-            <v-btn color="primary" variant="tonal" rounded="pill" class="text-none mt-6" prepend-icon="mdi-arrow-left"
+            <v-btn :color="themeColor" variant="tonal" rounded="pill" class="text-none mt-6" prepend-icon="mdi-arrow-left"
                 @click="router.push({ name: 'storefront', params: { storeSlug: route.params.storeSlug } })">
                 Voltar para a vitrine
             </v-btn>
@@ -586,11 +586,11 @@ function primaryImageOf(p: any): string {
                         </div>
 
                         <div class="action-buttons">
-                            <v-btn color="primary" variant="flat" size="large" rounded="pill"
+                            <v-btn :color="themeColor" variant="flat" size="large" rounded="pill"
                                 class="text-none flex-grow-1" prepend-icon="mdi-cart-plus" @click="handleAddToCart">
                                 Adicionar ao carrinho
                             </v-btn>
-                            <v-btn variant="tonal" color="primary" size="large" rounded="pill"
+                            <v-btn variant="tonal" :color="themeColor" size="large" rounded="pill"
                                 class="text-none flex-grow-1" prepend-icon="mdi-flash" @click="handleBuyNow">
                                 Comprar agora
                             </v-btn>
@@ -631,7 +631,7 @@ function primaryImageOf(p: any): string {
                             </div>
                         </div>
                         <div class="benefit">
-                            <v-icon size="18" color="primary">mdi-shield-check-outline</v-icon>
+                            <v-icon size="18" :color="themeColor">mdi-shield-check-outline</v-icon>
                             <div>
                                 <div class="benefit-title">Compra segura</div>
                                 <div class="benefit-desc">Ambiente protegido e criptografado</div>
@@ -651,7 +651,7 @@ function primaryImageOf(p: any): string {
             <!-- ==================== ATRIBUTOS ==================== -->
             <section v-if="product.product_attributes?.length" class="section">
                 <h2 class="section-title">
-                    <v-icon color="primary">mdi-format-list-bulleted-type</v-icon>
+                    <v-icon :color="themeColor">mdi-format-list-bulleted-type</v-icon>
                     Especificações
                 </h2>
                 <div class="attributes-table">
@@ -709,7 +709,7 @@ function primaryImageOf(p: any): string {
                     <div class="reviews-list">
                         <article v-for="review in reviews" :key="review.id" class="review-card">
                             <div class="review-header">
-                                <v-avatar color="primary" size="36" variant="tonal">
+                                <v-avatar :color="themeColor" size="36" variant="tonal">
                                     <span class="text-caption font-weight-bold">
                                         {{ initialsOf(review.customer?.full_name ?? '?') }}
                                     </span>
@@ -744,7 +744,7 @@ function primaryImageOf(p: any): string {
             <!-- ==================== PRODUTOS RELACIONADOS ==================== -->
             <section v-if="relatedProducts.length" class="section">
                 <h2 class="section-title">
-                    <v-icon color="primary">mdi-view-grid-outline</v-icon>
+                    <v-icon :color="themeColor">mdi-view-grid-outline</v-icon>
                     Você também pode gostar
                 </h2>
                 <div class="related-scroll">
@@ -769,7 +769,7 @@ function primaryImageOf(p: any): string {
             <!-- ==================== LIGHTBOX ==================== -->
             <v-dialog v-model="lightboxOpen" max-width="1000" content-class="lightbox-dialog">
                 <div class="lightbox">
-                    <v-btn icon="mdi-close" variant="flat" color="white" class="lightbox-close"
+                    <v-btn icon="mdi-close" variant="flat" color="error" class="lightbox-close"
                         @click="lightboxOpen = false" />
                     <img v-if="activeImage" :src="activeImage.url" :alt="activeImage.alt_text ?? product.name"
                         class="lightbox-img">
@@ -1516,8 +1516,9 @@ function primaryImageOf(p: any): string {
 /*  Lightbox                                                    */
 /* ============================================================ */
 :deep(.lightbox-dialog) {
-    background: transparent;
+    background: #d8d6d6ee;
     box-shadow: none;
+    border-radius: 12px;
 }
 
 .lightbox {
@@ -1537,8 +1538,8 @@ function primaryImageOf(p: any): string {
 
 .lightbox-close {
     position: absolute;
-    top: -8px;
-    right: -8px;
+    top: -2px;
+    right: -2px;
     z-index: 2;
 }
 
@@ -1560,11 +1561,11 @@ function primaryImageOf(p: any): string {
 }
 
 .lightbox-prev {
-    left: -28px;
+    left: -10px;
 }
 
 .lightbox-next {
-    right: -28px;
+    right: -10px;
 }
 
 .lightbox-counter {
