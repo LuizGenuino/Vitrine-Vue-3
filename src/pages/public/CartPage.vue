@@ -508,7 +508,7 @@ onMounted(() => {
                 Adicione produtos para começar sua compra.<br>
                 Já pensou no que quer levar hoje?
             </p>
-            <v-btn color="primary" variant="flat" size="large" rounded="pill" class="text-none px-6 mt-2"
+            <v-btn :color="themeColor" variant="flat" size="large" rounded="pill" class="text-none px-6 mt-2"
                 prepend-icon="mdi-store-outline" @click="continueShopping">
                 Explorar produtos
             </v-btn>
@@ -647,7 +647,7 @@ onMounted(() => {
                 <!-- Sugestões -->
                 <div v-if="suggestions.length" class="suggestions-section">
                     <h3 class="suggestions-title">
-                        <v-icon color="primary">mdi-plus-circle-outline</v-icon>
+                        <v-icon :color="themeColor">mdi-plus-circle-outline</v-icon>
                         Adicione ao pedido
                     </h3>
                     <div class="suggestions-scroll">
@@ -685,7 +685,7 @@ onMounted(() => {
                                 :error="!!couponError" :disabled="couponLoading" @keyup.enter="applyCoupon"
                                 @input="couponError = ''">
                                 <template #append-inner>
-                                    <v-btn v-if="couponInput.trim()" size="x-small" variant="flat" color="primary"
+                                    <v-btn v-if="couponInput.trim()" size="x-small" variant="flat" :color="themeColor"
                                         :loading="couponLoading" @click="applyCoupon">
                                         Aplicar
                                     </v-btn>
@@ -744,7 +744,7 @@ onMounted(() => {
 
                         <div class="calc-row">
                             <span class="calc-label">Frete</span>
-                            <span v-if="appliedCoupon?.free_shipping || amountToFreeShipping === 0"
+                            <span v-if="appliedCoupon?.free_shipping || amountToFreeShipping > 0"
                                 class="calc-value calc-free">
                                 Grátis
                             </span>
@@ -774,7 +774,7 @@ onMounted(() => {
                     </div>
 
                     <!-- Botão principal -->
-                    <v-btn color="primary" variant="flat" size="large" rounded="pill" class="text-none checkout-btn"
+                    <v-btn :color="themeColor" variant="flat" size="large" rounded="pill" class="text-none checkout-btn"
                         block :disabled="belowMinimum || cart.items.some(i => isOutOfStock(i) || exceedsStock(i))"
                         append-icon="mdi-arrow-right" @click="goToCheckout">
                         {{ showPrices ? 'Ir para o pagamento' : 'Finalizar pedido' }}
@@ -787,12 +787,7 @@ onMounted(() => {
 
                     <!-- Métodos de pagamento aceitos -->
                     <div class="payment-methods">
-                        <div class="payment-methods-title">Aceitamos:</div>
-                        <div class="payment-icons">
-                            <span class="payment-icon" title="Pix">🇧🇷 Pix</span>
-                            <span class="payment-icon" title="Cartão de crédito">💳 Crédito</span>
-                            <span class="payment-icon" title="Boleto">🧾 Boleto</span>
-                        </div>
+                       
                     </div>
                 </div>
             </aside>
