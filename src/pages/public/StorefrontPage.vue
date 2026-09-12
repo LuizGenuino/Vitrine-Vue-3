@@ -186,7 +186,7 @@ const productsQuery = useSupabaseQuery(async () => {
     if (error) throw error
     totalItems.value = count ?? 0
     return (data ?? []) as unknown as ProductWithExtras[]
-}, { watchSource: [store, filtersWatchSource, currentPage] })
+}, { watchSource: [store, filtersWatchSource, currentPage], immediate: false })
 
 const products = computed(() => productsQuery.data.value ?? [])
 
@@ -223,6 +223,7 @@ const displayedProducts = computed(() => {
 
 const featuredQuery = useSupabaseQuery(async () => {
     if (!store.value) return []
+
     const { data } = await supabase
         .from('products')
         .select(`id, name, slug, price,
@@ -233,7 +234,7 @@ const featuredQuery = useSupabaseQuery(async () => {
         .is('deleted_at', null)
         .limit(6)
     return (data ?? []) as unknown as ProductWithExtras[]
-}, { watchSource: [store.value?.id as any] })
+}, { watchSource: [store.value?.id as any], immediate: false })
 
 const featuredProducts = computed(() => featuredQuery.data.value ?? [])
 const showFeaturedRow = computed(() =>
@@ -420,7 +421,7 @@ onMounted(() => {
                         @click="filtersDrawerOpen = true">
                         <span class="hidden-sm-and-down">Filtros</span>
                         <v-badge v-if="filters.minPrice !== null || filters.maxPrice !== null || filters.onlyInStock"
-                            color="primary" dot inline />
+                            :color="themeColor" dot inline />
                     </v-btn>
                 </div>
             </div>
@@ -432,7 +433,7 @@ onMounted(() => {
                     <v-icon start size="14">mdi-magnify</v-icon>
                     "{{ filters.search }}"
                 </v-chip>
-                <v-chip v-if="selectedCategory" closable size="small" variant="tonal" color="primary"
+                <v-chip v-if="selectedCategory" closable size="small" variant="tonal" :color="themeColor"
                     @click:close="filters.categoryId = null">
                     <v-icon start size="14">mdi-tag</v-icon>
                     {{ selectedCategory.name }}
@@ -525,7 +526,7 @@ onMounted(() => {
                         ? 'Tente ajustar os filtros ou buscar outra coisa.'
                         : 'Volte em breve — novos produtos aparecerão aqui.' }}
                 </p>
-                <v-btn v-if="hasActiveFilters" color="primary" variant="tonal" rounded="pill" class="text-none"
+                <v-btn v-if="hasActiveFilters" :color="themeColor" variant="tonal" rounded="pill" class="text-none"
                     @click="clearFilters">
                     Limpar filtros
                 </v-btn>
@@ -617,7 +618,7 @@ onMounted(() => {
 
                 <!-- Disponibilidade -->
                 <div class="filter-section">
-                    <v-switch v-model="filters.onlyInStock" color="primary" hide-details density="compact">
+                    <v-switch v-model="filters.onlyInStock" :color="themeColor" hide-details density="compact">
                         <template #label>
                             <div>
                                 <div class="text-body-2 font-weight-medium">
@@ -655,7 +656,7 @@ onMounted(() => {
                 <v-btn variant="text" class="text-none" @click="clearFilters(); filtersDrawerOpen = false">
                     Limpar
                 </v-btn>
-                <v-btn color="primary" variant="flat" rounded="pill" class="text-none px-6" @click="applyPriceFilter">
+                <v-btn :color="themeColor" variant="flat" rounded="pill" class="text-none px-6" @click="applyPriceFilter">
                     Aplicar
                 </v-btn>
             </div>
@@ -664,7 +665,7 @@ onMounted(() => {
     </div>
 </template>
 
-<style scoped>
+<style scoped >
 .storefront-page {
     display: flex;
     flex-direction: column;
@@ -900,7 +901,7 @@ onMounted(() => {
 .featured-price {
     font-size: 1.125rem;
     font-weight: 800;
-    color: var(--theme-color, rgb(var(--v-theme-primary)));
+    color: var(--theme-color);
 }
 
 /* ============================================================ */
@@ -1086,7 +1087,7 @@ onMounted(() => {
 .product-price {
     font-size: 1.25rem;
     font-weight: 800;
-    color: var(--theme-color, rgb(var(--v-theme-primary)));
+    color: var(--theme-color);
 }
 
 .product-price-hidden {
