@@ -68,17 +68,6 @@ const features = [
                     </v-row>
                 </v-container>
             </section>
-
-            <v-container class="py-8">
-                <p class="text-center text-overline mb-8 text-medium-emphasis">Empresas que já simplificaram suas vendas
-                </p>
-                <v-row justify="center" align="center" class="opacity-60 grayscale">
-                    <v-col v-for="n in 4" :key="n" cols="6" md="2" class="text-center">
-                        <v-icon size="48">mdi-store-outline</v-icon>
-                    </v-col>
-                </v-row>
-            </v-container>
-
             <section class="bg-grey-lighten-4 py-16" id="como-funciona">
                 <v-container>
                     <div class="text-center mb-16">
