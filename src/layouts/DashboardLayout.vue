@@ -369,7 +369,6 @@ async function handleLogout() {
             <div class="pa-5">
                 <div class="d-flex align-center ga-3 mb-5">
                     <v-avatar :image="currentStore?.logo_url ?? undefined" color="primary" rounded="lg" size="42">
-                        <v-icon v-if="!currentStore?.logo_url" icon="mdi-storefront" color="white" />
                     </v-avatar>
                     <div class="min-width-0 flex-grow-1">
                         <div class="text-subtitle-2 font-weight-black text-truncate leading-tight">
@@ -410,7 +409,7 @@ async function handleLogout() {
                     </v-alert>
                 </v-card>
 
-                <v-skeleton-loader v-else type="card" />
+                <!-- <v-skeleton-loader v-else type="card" /> -->
             </div>
 
             <!--  Menu  -->
