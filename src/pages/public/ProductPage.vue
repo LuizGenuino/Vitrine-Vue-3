@@ -640,8 +640,8 @@ function primaryImageOf(p: any): string {
                         <div class="benefit">
                             <v-icon size="18" color="info">mdi-swap-horizontal</v-icon>
                             <div>
-                                <div class="benefit-title">Trocas fáceis</div>
-                                <div class="benefit-desc">Em até 7 dias após o recebimento</div>
+                                <div class="benefit-title">Via Whatsapp</div>
+                                <div class="benefit-desc">Combine pagamento e entrega via Whatsapp</div>
                             </div>
                         </div>
                     </div>

@@ -588,7 +588,6 @@ onUnmounted(() => {
                             <div v-for="item in order.items" :key="item.id" class="order-item d-flex ga-3 align-start">
                                 <v-avatar :image="item.product_image ?? undefined" size="64" rounded="lg"
                                     color="grey-lighten-3">
-                                    <v-icon v-if="!item.product_image" color="grey">mdi-image-off-outline</v-icon>
                                 </v-avatar>
 
                                 <div class="flex-grow-1 min-width-0">
@@ -664,7 +663,7 @@ onUnmounted(() => {
                         </div>
 
                         <!-- Pagamento -->
-                        <div v-if="order.payment" class="mt-4 pa-3 rounded-lg bg-surface-variant">
+                        <div v-if="order.payment" class="mt-4 pa-3 rounded-lg border border-info">
                             <div class="d-flex align-center ga-2 mb-1">
                                 <v-icon size="18">{{ paymentMethodLabel[order.payment.method]?.icon ??
                                     'mdi-credit-card-outline'

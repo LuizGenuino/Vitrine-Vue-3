@@ -9,6 +9,7 @@ import { useNotifications } from '@/stores/notifications.store'
 import { useAsyncAction } from '@/composables/useAsyncAction'
 import { supabase } from '@/lib/supabase'
 import AppTextField from '@/components/base/AppTextField.vue'
+import useLoading from '@/composables/useLoadingDialog'
 
 /* -------------------------------------------------------------------------- */
 /*  Setup                                                                     */
@@ -206,17 +207,18 @@ onMounted(() => {
 /* -------------------------------------------------------------------------- */
 
 const existingCustomer = ref<any>(null)
-const emailCheckLoading = ref(false)
+const phoneCheckLoading = ref(false)
 
 let emailDebounce: number | undefined
 
 watch(() => form.phone, (phone) => {
     window.clearTimeout(emailDebounce)
-   
+
     if (!phone || !/^\(\d{2}\) \d{5}-\d{4}$/.test(phone) || !store.value) return
-     existingCustomer.value = null
+    existingCustomer.value = null
     emailDebounce = window.setTimeout(async () => {
-        emailCheckLoading.value = true
+        useLoading.show("Buscando Usuario")
+        phoneCheckLoading.value = true
         const { data, error } = await supabase.rpc(
             'find_customer_by_phone',
             {
@@ -224,15 +226,17 @@ watch(() => form.phone, (phone) => {
                 p_phone: onlyDigits(phone),
             }
         )
-
         if (error) {
+            useLoading.hide()
             throw error
         }
         if (data) {
             existingCustomer.value = await data
-             useExistingData()
+            useExistingData()
         }
-        emailCheckLoading.value = false
+        useLoading.hide()
+        phoneCheckLoading.value = false
+
     }, 600)
 })
 
@@ -273,22 +277,25 @@ watch(() => form.postal_code, (cep) => {
     if (digits.length !== 8) return
 
     cepDebounce = window.setTimeout(async () => {
+        useLoading.show("Buscando Endereço")
         cepLoading.value = true
         try {
+
             const res = await fetch(`https://viacep.com.br/ws/${digits}/json/`)
             const data = await res.json()
             if (data.erro) {
                 notify.error('CEP não encontrado')
                 return
             }
-            if (!form.street) form.street = data.logradouro ?? ''
-            if (!form.neighborhood) form.neighborhood = data.bairro ?? ''
-            if (!form.city) form.city = data.localidade ?? ''
-            if (!form.state) form.state = data.uf ?? ''
+            form.street = data.logradouro ?? form.street
+            form.neighborhood = data.bairro ?? form.neighborhood
+            form.city = data.localidade ?? form.city
+            form.state = data.uf ?? form.state
         } catch {
             // silencioso — usuário digita manualmente
         } finally {
             cepLoading.value = false
+            useLoading.hide()
         }
     }, 500)
 })
@@ -307,7 +314,7 @@ interface ShippingOption {
 
 const shippingOptions = ref<ShippingOption[]>([])
 const shippingLoading = ref(false)
-const selectedShippingId = ref<string | null>(null)
+const selectedShippingId = ref<string | null>('delivery')
 
 async function calculateShipping() {
     if (!form.postal_code || onlyDigits(form.postal_code).length !== 8) return
@@ -324,7 +331,7 @@ async function calculateShipping() {
     shippingOptions.value = [
         { id: 'pac', name: 'PAC', price: freeShipping ? 0 : 18.90, days: '5 a 8 dias úteis' },
         { id: 'sedex', name: 'SEDEX', price: freeShipping ? 0 : 32.50, days: '2 a 4 dias úteis' },
-        { id: 'motoboy', name: 'Motoboy', price: 12.00, days: 'Mesmo dia (região metropolitana)' },
+        { id: 'delivery', name: 'delivery', price: 0.00, days: 'Mesmo dia (região metropolitana)' },
     ]
 
     if (!selectedShippingId.value && shippingOptions.value.length) {
@@ -635,7 +642,7 @@ const { execute: placeOrder, loading: placing } = useAsyncAction(
                 `Olá! Fiz o pedido *#${order.order_number}* na loja.\n\n` +
                 `📦 *Itens:*\n${itemsList}\n\n` +
                 `💰 *Total: ${brl(finalTotal.value)}*\n\n` +
-                `📍 *Entrega:*\n${form.street}, ${form.number} - ${form.neighborhood}, ${form.city}/${form.state}\n\n` +
+                `📍 *Entrega:*\n${form.postal_code}, ${form.street}, ${form.number} - ${form.neighborhood}, ${form.city}/${form.state}\n\n` +
                 `Aguardo instruções para pagamento!`,
             )
             window.open(`https://wa.me/${whatsappNumber.value}?text=${msg}`, '_blank')
@@ -653,7 +660,7 @@ const { execute: placeOrder, loading: placing } = useAsyncAction(
                 storeSlug: route.params.storeSlug,
                 orderNumber: order.order_number,
             },
-            query: { token: order.access_token_hash}
+            query: { token: order.access_token_hash }
         })
     },
     { successMsg: 'Pedido criado com sucesso! 🎉' },
@@ -705,7 +712,7 @@ const ufOptions = [
                 <!-- ============ STEP 1: IDENTIFICAÇÃO ============ -->
                 <div v-show="currentStep.key === 'identity'" class="step-content">
                     <h2 class="step-title">
-                        <v-icon color="primary">mdi-account-outline</v-icon>
+                        <v-icon :color="themeColor">mdi-account-outline</v-icon>
                         Quem está comprando?
                     </h2>
 
@@ -768,7 +775,7 @@ const ufOptions = [
                 <!-- ============ STEP 2: ENDEREÇO ============ -->
                 <div v-show="currentStep.key === 'address'" class="step-content">
                     <h2 class="step-title">
-                        <v-icon color="primary">mdi-truck-outline</v-icon>
+                        <v-icon :color="themeColor">mdi-truck-outline</v-icon>
                         Para onde vamos entregar?
                     </h2>
 
@@ -839,7 +846,7 @@ const ufOptions = [
                     </div>
 
                     <div class="save-address-toggle mt-4">
-                        <v-switch v-model="form.save_address" color="primary" hide-details density="compact">
+                        <v-switch v-model="form.save_address" :color="themeColor" hide-details density="compact">
                             <template #label>
                                 <span class="text-body-2">
                                     Salvar este endereço para compras futuras
@@ -854,15 +861,16 @@ const ufOptions = [
                             <v-icon>mdi-truck-fast-outline</v-icon>
                             Forma de entrega
                         </h3>
-
-                        <v-btn v-if="!shippingOptions.length && !shippingLoading" color="primary" variant="tonal"
+                        <p>Definir com o Vendedor no Whatsapp</p>
+                        <!-- Implementação Futura -->
+                        <!-- <v-btn v-if="!shippingOptions.length && !shippingLoading" :color="themeColor" variant="tonal"
                             rounded="pill" class="text-none" prepend-icon="mdi-calculator"
                             :disabled="onlyDigits(form.postal_code).length !== 8" @click="calculateShipping">
                             Calcular frete
                         </v-btn>
 
                         <div v-if="shippingLoading" class="shipping-loading">
-                            <v-progress-circular indeterminate size="24" color="primary" />
+                            <v-progress-circular indeterminate size="24" :color="themeColor" />
                             <span class="text-body-2 text-medium-emphasis">Calculando fretes...</span>
                         </div>
 
@@ -882,14 +890,14 @@ const ufOptions = [
                         </div>
                         <p v-if="addressErrors.shipping" class="form-error">
                             {{ addressErrors.shipping }}
-                        </p>
+                        </p> -->
                     </div>
                 </div>
 
                 <!-- ============ STEP 3: PAGAMENTO ============ -->
                 <div v-show="currentStep.key === 'payment'" class="step-content">
                     <h2 class="step-title">
-                        <v-icon color="primary">mdi-credit-card-outline</v-icon>
+                        <v-icon :color="themeColor">mdi-credit-card-outline</v-icon>
                         Como você quer pagar?
                     </h2>
 
@@ -902,15 +910,15 @@ const ufOptions = [
                                 <div class="payment-label">{{ method.label }}</div>
                                 <div class="payment-desc">{{ method.desc }}</div>
                             </div>
-                            <v-icon v-if="form.payment_method === method.id" color="primary" size="20">
+                            <v-icon v-if="form.payment_method === method.id" :color="themeColor" size="20">
                                 mdi-check-circle
                             </v-icon>
                         </label>
                     </div>
 
                     <!-- Placeholder de cartão (visual — integração real vai via Edge Function) -->
-                    <v-card v-if="form.payment_method === 'credit_card'" variant="tonal" color="primary" rounded="lg"
-                        class="pa-4 mt-4">
+                    <v-card v-if="form.payment_method === 'credit_card'" variant="tonal" :color="themeColor"
+                        rounded="lg" class="pa-4 mt-4">
                         <div class="d-flex ga-2 align-center">
                             <v-icon>mdi-information-outline</v-icon>
                             <div class="text-body-2">
@@ -945,7 +953,7 @@ const ufOptions = [
 
                     <!-- Termos -->
                     <div class="terms-block mt-4">
-                        <v-checkbox v-model="form.accept_terms" color="primary" hide-details density="compact">
+                        <v-checkbox v-model="form.accept_terms" :color="themeColor" hide-details density="compact">
                             <template #label>
                                 <span class="text-body-2">
                                     Li e aceito os
@@ -969,12 +977,12 @@ const ufOptions = [
                     </v-btn>
                     <div v-else />
 
-                    <v-btn v-if="activeStepIndex < steps.length - 1" color="primary" variant="flat" rounded="pill"
+                    <v-btn v-if="activeStepIndex < steps.length - 1" :color="themeColor" variant="flat" rounded="pill"
                         size="large" class="text-none px-8" append-icon="mdi-arrow-right" :disabled="!canAdvance"
                         @click="nextStep">
                         Continuar
                     </v-btn>
-                    <v-btn v-else color="primary" variant="flat" rounded="pill" size="large"
+                    <v-btn v-else :color="themeColor" variant="flat" rounded="pill" size="large"
                         class="text-none px-8 place-order-btn" prepend-icon="mdi-check-decagram" :loading="placing"
                         :disabled="!canAdvance" @click="placeOrder">
                         {{ form.payment_method === 'whatsapp' ? 'Enviar pedido via WhatsApp' : 'Finalizar pedido' }}
@@ -1057,12 +1065,8 @@ const ufOptions = [
                             <span>Pagamento seguro</span>
                         </div>
                         <div class="badge-item">
-                            <v-icon size="16" color="primary">mdi-shield-check-outline</v-icon>
+                            <v-icon size="16" :color="themeColor">mdi-shield-check-outline</v-icon>
                             <span>Dados criptografados</span>
-                        </div>
-                        <div class="badge-item">
-                            <v-icon size="16" color="warning">mdi-refresh</v-icon>
-                            <span>7 dias para troca</span>
                         </div>
                     </div>
                 </div>
@@ -1611,8 +1615,8 @@ const ufOptions = [
 
 .summary-item-qty {
     position: absolute;
-    top: -6px;
-    right: -6px;
+    top: 0px;
+    right: 0px;
     background: rgb(var(--v-theme-primary));
     color: white;
     font-size: 0.65rem;
@@ -1625,6 +1629,7 @@ const ufOptions = [
     align-items: center;
     justify-content: center;
     border: 2px solid rgb(var(--v-theme-surface));
+    z-index: 999;
 }
 
 .summary-item-info {
