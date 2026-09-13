@@ -2,7 +2,7 @@ import { ref, watch } from 'vue';
 import { defineStore } from 'pinia';
 import type { ThemeMode } from '@/types';
 
-const UI_STORAGE_KEY = 'saas-showcase-ui';
+const UI_STORAGE_KEY = 'vibestore-ui';
 
 type StoredUiState = {
   themeMode?: ThemeMode;

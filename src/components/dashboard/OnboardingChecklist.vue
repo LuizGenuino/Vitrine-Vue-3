@@ -1,114 +1,57 @@
 <script setup lang="ts">
-import { computed } from 'vue';
-
 interface Step {
-    key: string;
-    title: string;
-    description: string;
-    done: boolean;
-    optional?: boolean;
-    to?: any; // Adicionamos navegação para tornar o checklist útil
+    key: string
+    title: string
+    description: string
+    done: boolean
+    action?: { label: string; to: any }
 }
-
-const props = defineProps<{
-    title?: string;
-    completion: number;
-    steps: Step[];
-}>();
-
-// Ordenação inteligente: Pendentes primeiro, Opcionais por último
-const sortedSteps = computed(() => {
-    return [...props.steps].sort((a, b) => {
-        if (a.done === b.done) return 0;
-        return a.done ? 1 : -1;
-    });
-});
-
-const isFullyCompleted = computed(() => props.completion === 100);
+defineProps<{ steps: Step[] }>()
+defineEmits<{ action: [step: Step] }>()
 </script>
 
 <template>
-    <v-card rounded="xl" border flat class="overflow-hidden">
-        <v-card-item :class="isFullyCompleted ? 'bg-success-lighten-5' : 'bg-surface'">
-            <template v-slot:prepend>
-                <v-icon :icon="isFullyCompleted ? 'mdi-party-popper' : 'mdi-rocket-launch-outline'"
-                    :color="isFullyCompleted ? 'success' : 'primary'" size="large" />
-            </template>
+    <div class="d-flex flex-column ga-3">
+        <div v-for="step in steps" :key="step.key" class="d-flex align-center ga-4 pa-3 rounded-lg step-row"
+            :class="{ 'step-done': step.done }">
+            <v-avatar :color="step.done ? 'success' : 'grey-lighten-3'" size="32">
+                <v-icon :color="step.done ? 'white' : 'grey'" size="18">
+                    {{ step.done ? 'mdi-check' : 'mdi-circle-outline' }}
+                </v-icon>
+            </v-avatar>
 
-            <v-card-title class="text-h6 font-weight-bold">
-                {{ isFullyCompleted ? 'Tudo pronto para decolar!' : (title || 'Checklist de Lançamento') }}
-            </v-card-title>
+            <div class="flex-grow-1 min-width-0">
+                <div class="text-body-2 font-weight-bold"
+                    :class="{ 'text-decoration-line-through text-medium-emphasis': step.done }">
+                    {{ step.title }}
+                </div>
+                <div class="text-caption text-medium-emphasis">
+                    {{ step.description }}
+                </div>
+            </div>
 
-            <template v-slot:append>
-                <v-chip :color="isFullyCompleted ? 'success' : 'primary'" variant="flat" font-weight-bold size="small">
-                    {{ completion }}%
-                </v-chip>
-            </template>
-        </v-card-item>
-
-        <v-progress-linear :model-value="completion" :color="isFullyCompleted ? 'success' : 'primary'" height="6"
-            flat />
-
-        <v-list lines="two" class="pa-2">
-            <v-hover v-for="step in sortedSteps" :key="step.key" v-slot="{ isHovering, props: hoverProps }">
-                <v-list-item v-bind="hoverProps" :to="step.done ? undefined : step.to" :active="false" rounded="lg"
-                    class="mb-1 transition-all"
-                    :class="{ 'opacity-50 grayscale': step.done, 'bg-grey-lighten-5': isHovering && !step.done }">
-                    <template v-slot:prepend>
-                        <v-icon :icon="step.done ? 'mdi-check-circle' : 'mdi-circle-outline'"
-                            :color="step.done ? 'success' : 'grey-lighten-1'" class="mr-2" />
-                    </template>
-
-                    <v-list-item-title :class="['font-weight-bold', { 'text-decoration-line-through': step.done }]">
-                        {{ step.title }}
-                        <v-chip v-if="step.optional" size="x-small" variant="tonal"
-                            class="ml-2 text-uppercase">Opcional</v-chip>
-                    </v-list-item-title>
-
-                    <v-list-item-subtitle class="mt-1">
-                        {{ step.description }}
-                    </v-list-item-subtitle>
-
-                    <template v-slot:append>
-                        <v-icon v-if="!step.done" icon="mdi-chevron-right" color="primary"
-                            :class="{ 'translate-x-2': isHovering }" style="transition: transform 0.2s" />
-                        <v-icon v-else icon="mdi-lock-outline" size="small" color="grey-lighten-1" />
-                    </template>
-                </v-list-item>
-            </v-hover>
-        </v-list>
-
-        <v-divider />
-        <div class="pa-4 bg-grey-lighten-5 text-center">
-            <p v-if="!isFullyCompleted" class="text-caption text-medium-emphasis">
-                Complete as tarefas em destaque para liberar sua vitrine pública.
-            </p>
-            <v-btn v-else color="success" variant="text" block append-icon="mdi-share-variant"
-                class="text-none font-weight-bold">
-                Compartilhar link da minha loja
+            <v-btn v-if="!step.done && step.action" variant="text" size="small" color="primary" class="text-none"
+                @click="$emit('action', step)">
+                {{ step.action.label }}
             </v-btn>
         </div>
-    </v-card>
+    </div>
 </template>
 
 <style scoped>
-.transition-all {
-    transition: all 0.3s ease;
+.step-row {
+    transition: background-color .2s;
 }
 
-.opacity-50 {
-    opacity: 0.6;
+.step-row:hover {
+    background-color: rgb(var(--v-theme-surface-variant), .3);
 }
 
-.grayscale {
-    filter: grayscale(0.8);
+.step-done {
+    opacity: .7;
 }
 
-.translate-x-2 {
-    transform: translateX(6px);
-}
-
-:deep(.v-list-item-title) {
-    font-size: 0.95rem !important;
+.min-width-0 {
+    min-width: 0;
 }
 </style>
